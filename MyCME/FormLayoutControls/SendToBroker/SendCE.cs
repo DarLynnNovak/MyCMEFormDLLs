@@ -6,7 +6,7 @@ using System;
 using System.Windows.Forms;
 using System.Xml.Linq;
 
-namespace ACSMyCME.FormLayoutControls.SendToBroker
+namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 { 
    public class SendCE : FormTemplateLayout
     {
