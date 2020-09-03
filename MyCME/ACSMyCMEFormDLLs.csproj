@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <UsingTask TaskName="IncrementBuildNumber" AssemblyFile="BuildTask.dll" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{6E3BB157-AA85-467A-A680-FCA3B836F6F3}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ACSMyCMEFormDLLs</RootNamespace>
+    <AssemblyName>ACSMyCMEFormDLLs</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AptifyApplication">
+      <HintPath>C:\Program Files\Aptify 5.0\AptifyApplication.dll</HintPath>
+    </Reference>
+    <Reference Include="AptifyAttributeManagement, Version=4.0.0.0, Culture=neutral, PublicKeyToken=f3fa0ecabf9514d9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Aptify 5.0\AptifyAttributeManagement.dll</HintPath>
+    </Reference>
+    <Reference Include="AptifyExceptionManagement">
+      <HintPath>C:\Program Files\Aptify 5.0\AptifyExceptionManagement.dll</HintPath>
+    </Reference>
+    <Reference Include="AptifyFormTemplateControls, Version=4.0.0.0, Culture=neutral, PublicKeyToken=f3fa0ecabf9514d9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Libs\AptifyFormTemplateControls.dll</HintPath>
+    </Reference>
+    <Reference Include="AptifyFormTemplateGUI, Version=4.0.0.0, Culture=neutral, PublicKeyToken=f3fa0ecabf9514d9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Aptify 5.0\AptifyFormTemplateGUI.dll</HintPath>
+    </Reference>
+    <Reference Include="AptifyFormTemplateHost, Version=4.0.0.0, Culture=neutral, PublicKeyToken=f3fa0ecabf9514d9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Aptify 5.0\AptifyFormTemplateHost.dll</HintPath>
+    </Reference>
+    <Reference Include="AptifyFormTemplateMetadata, Version=4.0.0.0, Culture=neutral, PublicKeyToken=f3fa0ecabf9514d9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Aptify 5.0\AptifyFormTemplateMetadata.dll</HintPath>
+    </Reference>
+    <Reference Include="AptifyFormTemplatePartEntity">
+      <HintPath>C:\Program Files\Aptify 5.0\AptifyFormTemplatePartEntity.dll</HintPath>
+    </Reference>
+    <Reference Include="AptifyGenericDataServices">
+      <HintPath>C:\Program Files\Aptify 5.0\AptifyGenericDataServices.dll</HintPath>
+    </Reference>
+    <Reference Include="AptifyGenericEntity">
+      <HintPath>C:\Program Files\Aptify 5.0\AptifyGenericEntity.dll</HintPath>
+    </Reference>
+    <Reference Include="AptifyGenericEntityBase, Version=4.0.0.0, Culture=neutral, PublicKeyToken=f3fa0ecabf9514d9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Aptify 5.0\AptifyGenericEntityBase.dll</HintPath>
+    </Reference>
+    <Reference Include="AptifySQLDataServices, Version=4.0.0.0, Culture=neutral, PublicKeyToken=f3fa0ecabf9514d9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Aptify 5.0\AptifySQLDataServices.dll</HintPath>
+    </Reference>
+    <Reference Include="AptifyUtility, Version=4.0.0.0, Culture=neutral, PublicKeyToken=f3fa0ecabf9514d9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Aptify 5.0\AptifyUtility.dll</HintPath>
+    </Reference>
+    <Reference Include="AptifyWindowsControls">
+      <HintPath>C:\Program Files\Aptify 5.0\AptifyWindowsControls.dll</HintPath>
+    </Reference>
+    <Reference Include="IAptifyDataServices, Version=4.0.0.0, Culture=neutral, PublicKeyToken=f3fa0ecabf9514d9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Aptify 5.0\IAptifyDataServices.dll</HintPath>
+    </Reference>
+    <Reference Include="Infragistics2.Win.Misc.v8.1, Version=8.1.20081.1000, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb" />
+    <Reference Include="Infragistics2.Win.v8.1, Version=8.1.20081.1000, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsFormsIntegration" />
+    <Reference Include="WizardLayoutControls">
+      <HintPath>..\..\..\..\Libs\WizardLayoutControls.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="FormLayoutControls\SendToBroker\SendCE.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="BeforeBuild">
+    <IncrementBuildNumber AssemblyFileLocation="$(MSBuildProjectDirectory)\Properties\AssemblyInfo.cs" />
+  </Target>
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>
