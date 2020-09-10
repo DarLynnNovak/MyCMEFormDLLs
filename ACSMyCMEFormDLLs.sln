@@ -7,10 +7,28 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACSMyCMEFormDLLs", "MyCME\A
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Aptify Prod 6|Any CPU = Aptify Prod 6|Any CPU
+		Aptify Prod|Any CPU = Aptify Prod|Any CPU
+		Aptify Staging 6|Any CPU = Aptify Staging 6|Any CPU
+		Aptify Staging|Any CPU = Aptify Staging|Any CPU
+		Aptify Test 6|Any CPU = Aptify Test 6|Any CPU
+		Aptify Test|Any CPU = Aptify Test|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Aptify Prod 6|Any CPU.ActiveCfg = Aptify Prod 6|Any CPU
+		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Aptify Prod 6|Any CPU.Build.0 = Aptify Prod 6|Any CPU
+		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Aptify Prod|Any CPU.ActiveCfg = Aptify Prod|Any CPU
+		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Aptify Prod|Any CPU.Build.0 = Aptify Prod|Any CPU
+		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Aptify Staging 6|Any CPU.ActiveCfg = Aptify Staging 6|Any CPU
+		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Aptify Staging 6|Any CPU.Build.0 = Aptify Staging 6|Any CPU
+		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Aptify Staging|Any CPU.ActiveCfg = Aptify Staging|Any CPU
+		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Aptify Staging|Any CPU.Build.0 = Aptify Staging|Any CPU
+		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Aptify Test 6|Any CPU.ActiveCfg = Aptify Test 6|Any CPU
+		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Aptify Test 6|Any CPU.Build.0 = Aptify Test 6|Any CPU
+		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Aptify Test|Any CPU.ActiveCfg = Aptify Test|Any CPU
+		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Aptify Test|Any CPU.Build.0 = Aptify Test|Any CPU
 		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E3BB157-AA85-467A-A680-FCA3B836F6F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
