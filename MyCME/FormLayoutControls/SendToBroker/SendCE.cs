@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using System.Xml;
 using System.Web;
+using System.Data;
 
 namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 { 
@@ -26,17 +27,20 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         private AptifyTextBox _eventStartDate;
         private AptifyTextBox _eventEndDate;
         XDocument xDoc = new XDocument();
-        string saveLocation = "C:/Code CSharp/ACSMyCMEFormDLLs/MyCME/FormLayoutControls/XML/XMLCEData.xml";
+        string saveLocation = "C:\\Code CSharp\\ACSMyCMEFormDLLs\\MyCME\\FormLayoutControls\\XML\\XMLCEData.xml";
         string attachmentCatIdSql;
         int attachmentCatId;
         string entityIdSql;
         int entityId;
         string senderIdSql;
         int senderId;
+        long attachId;
         long userId;
         long recordId;
         string filename = null;
         string result = "Failed";
+        byte[] data;
+
         public void Config()
         {
             try
@@ -132,10 +136,14 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 );
             MessageBox.Show(Convert.ToString(xDoc));
             xDoc.Save(saveLocation);
+     
+            CreateAttachment();
+        }
+        private void SaveForm()
+        {
             this.FormTemplateContext.GE.SetValue("XmlData", Convert.ToString(xDoc));
             this.FormTemplateContext.GE.Save();
         }
-       
         private void CreateAttachment()
         {
             entityIdSql = "select ID from Entities where name like 'ACSCMESendToBroker'";
@@ -143,27 +151,34 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
             attachmentCatIdSql = "select ID from vwAttachmentCategories where name like 'MyCMEXML'";
             attachmentCatId = Convert.ToInt32(m_oda.ExecuteScalar(attachmentCatIdSql));
             //need to get the file that gets created and read it back into
-        
+
             filename = Path.GetFileName(saveLocation);
+            data = File.ReadAllBytes(saveLocation);
+           
+           // byte[] data;
+            //FileStream fls;
+            //fls = new FileStream(saveLocation, FileMode.Open, FileAccess.Read);         
+            //fls.Close();
+            ////a byte array to read the doc
+            //byte[] blobDoc = new byte[fls.Length];
+            //fls.Read(data, 0, Convert.ToInt32(fls.Length));
 
-            byte[] array = File.ReadAllBytes(saveLocation);
-            var lTemp = new byte[array.Length];
-            
-            
-            //file.InputStream.Read(lTemp, 0, array.Length);
-
-            MessageBox.Show("Filename = " + filename);
-            MessageBox.Show("fileBytes = " + array.Length);
+            //using (BinaryReader br = new BinaryReader(fls))
+            //{
+            //    data = br.ReadBytes((Int32)fls.Length);
+            //}
 
             AttachmentsGE = m_oApp.GetEntityObject("Attachments", -1);
-            AttachmentsGE.SetValue("Name", "XMLCEData");
+            AttachmentsGE.SetValue("Name", filename);
             AttachmentsGE.SetValue("Description", "XMLCEData");
             AttachmentsGE.SetValue("EntityID", entityId);
             AttachmentsGE.SetValue("RecordID", recordId);
             AttachmentsGE.SetValue("CategoryID", attachmentCatId);
             AttachmentsGE.SetValue("LocalFileName", saveLocation);
-            AttachmentsGE.SetValue("BlobData", lTemp);
-             
+            AttachmentsGE.SetValue("BlobData", data);
+
+          
+
 
             if (!AttachmentsGE.Save(false))
             {
@@ -173,15 +188,28 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
             }
             else
             {
-                AttachmentsGE.Save(true);
+                AttachmentsGE.Save(true); 
                 result = "Success";
+                attachId = AttachmentsGE.RecordID;
+                SaveAttachmentBlob();
+
 
             }
-
+           
+            SaveForm();
 
 
         }
+        public void SaveAttachmentBlob()
+        {
 
+            var dp = new IDataParameter[2];
+            dp[0] = m_oda.GetDataParameter("@ID", SqlDbType.BigInt, attachId);
+            dp[1] = m_oda.GetDataParameter("@BLOBData", SqlDbType.Image, data.Length, data);
+            m_oda.ExecuteNonQueryParametrized("Aptify.dbo.spInsertAttachmentBlob", CommandType.StoredProcedure, dp);
+
+
+        }
     }//End Class
 
 }//End Namespace
