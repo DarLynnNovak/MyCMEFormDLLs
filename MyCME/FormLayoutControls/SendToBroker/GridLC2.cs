@@ -242,6 +242,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 dp[0] = m_oda.GetDataParameter("@ID", SqlDbType.BigInt, attachId);
                 dp[1] = m_oda.GetDataParameter("@BLOBData", SqlDbType.Image, data.Length, data);
                 m_oda.ExecuteNonQueryParametrized("Aptify.dbo.spInsertAttachmentBlob", CommandType.StoredProcedure, dp);
+                RemoveLocalFile();
                 SaveForm();
 
             }
@@ -414,6 +415,26 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 ExceptionManager.Publish(ex);
             }
         }
+
+        private void RemoveLocalFile()
+        {
+            try
+            {
+                string FileToDelete;
+
+                FileToDelete = saveLocation;
+
+                if (System.IO.File.Exists(FileToDelete) == true)
+                {
+                    System.IO.File.Delete(FileToDelete);
+                    MessageBox.Show("File Deleted");
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+
         private void _sendToBrokerBtn_Click(object sender, EventArgs e)
         {
            // CreateXml();

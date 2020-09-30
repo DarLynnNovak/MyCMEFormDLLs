@@ -150,6 +150,10 @@
       <HintPath>C:\Program Files\Aptify 5.0\AptifyGenericEntityBase.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="AptifyProcessFlowEngine, Version=4.0.0.0, Culture=neutral, PublicKeyToken=f3fa0ecabf9514d9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\Aptify 5.0 - DBTest\AptifyProcessFlowEngine.dll</HintPath>
+    </Reference>
     <Reference Include="AptifySQLDataServices, Version=4.0.0.0, Culture=neutral, PublicKeyToken=f3fa0ecabf9514d9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files\Aptify 5.0\AptifySQLDataServices.dll</HintPath>
