@@ -363,7 +363,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         {
             // CreateXml();
             var answer = MessageBox.Show("Are you sure you wish to process records the selected records?", "Submit XML", MessageBoxButtons.YesNo);
-            var filename = "XmlEventCourses" + DateTime.Now.ToString("yyyyMMdd_hh:mm") + ".xml";
+            var filename = "XmlEventCourses" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".xml";
 
             switch (answer)
             {
