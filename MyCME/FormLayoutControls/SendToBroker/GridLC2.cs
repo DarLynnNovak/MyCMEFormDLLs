@@ -403,8 +403,9 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     bool isSelected = Convert.ToBoolean(row.Cells["checkBoxColumn"].Value);
                     if (isSelected)
                     {
-                        eventId += Convert.ToInt32(Environment.NewLine);
-                        eventId += Convert.ToInt32(row.Cells["ID"].Value.ToString());
+                        //eventId += Convert.ToInt32(Environment.NewLine);
+                        //eventId += Convert.ToInt32(row.Cells["ID"].Value.ToString());
+                        eventId = Convert.ToInt32(row.Cells["ID"].Value.ToString());
                         CreateXml(eventId);
                         num += 1;
 
@@ -481,7 +482,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     Board board = new Board();
                     board.id_board = Convert.ToInt32(dt.Rows[x]["BoardId"]); //this needs to be the BoardId from ACSSendCmeDataBrokerBoard
 
-                    var sqlSubjects = "SELECT * FROM vwACSCMEDataBrokerBoardSubject WHERE Active = 1 AND ACSCMEDataBrokerBoard_ID = " + board.id_board ;
+                    var sqlSubjects = "SELECT * FROM vwACSCMEDataBrokerBoardSubject WHERE Active = 1 AND ACSCMEDataBrokerBoard_BoardId = " + board.id_board ;
                     var dtComponents = DataAction.GetDataTable(sqlSubjects, IAptifyDataAction.DSLCacheSetting.BypassCache);
 
                     //start board_component for loop
