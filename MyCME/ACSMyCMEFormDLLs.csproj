@@ -198,6 +198,7 @@
     <Compile Include="FormLayoutControls\Main\SendCE.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="FormLayoutControls\SendToBroker\GridLC2.cs" />
     <Compile Include="FormLayoutControls\SendToBroker\GridLC3.cs" />
     <Compile Include="FormLayoutControls\SendToBroker\GridLC4.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
