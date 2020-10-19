@@ -52,15 +52,15 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
     public class Board
     {
         public int id_board; //locate BoardId from ACSCMEDataBrokerBoard 
-       
+        public List<Component> Components { get; set; }
     }
 
-    //public class component
-    //{
-    //    public string cd_subject_area; //locate SubjectAreaCode from ACSCMEDataBrokerBoardSubject
-    //    public decimal am_app_hours; // CME_Max_Credits from ACSCMEEvent 
-    //    public string cd_profession; //MD or DO depending on what doctor is
-    //}
+    public class Component
+    {
+        public string cd_subject_area; //locate SubjectAreaCode from ACSCMEDataBrokerBoardSubject
+        public decimal am_app_hours; // CME_Max_Credits from ACSCMEEvent 
+        public string cd_profession; //MD or DO depending on what doctor is
+    }
 
     class GridLC3 : FormTemplateLayout
     {
@@ -291,11 +291,15 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 writer = new StreamWriter(saveLocation);
                 
                 Courses courses = new Courses();
+                Board board = new Board();
                 courses.id_parent_provider = providerId;
                 courses.upload_key = 12345; //need to get the upload_key number from the CE Broker
                 eventId = 0;
                 courses.ChildCourses = new List<ChildCourse>();
                 ChildCourse child = new ChildCourse();
+                child.Boards = new List<Board>();
+                Component component = new Component();
+                board.Components = new List<Component>();
 
                 foreach (DataGridViewRow row in grdRecordSearch.Rows)
                 {
@@ -348,19 +352,36 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                             Boards = child.Boards
 
                         }); //end coursechild add
-                        child.Boards = new List<Board>();
+
                         var sql = "SELECT BoardId, Name FROM vwACSCMEDataBrokerBoard WHERE ACSCMEDataBrokerReporter_Name = 'CE Broker' AND Active = 1";
                         var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
                         for (int x = 0; x < dt.Rows.Count; x++)
                         {
                             idboard = Convert.ToInt32(dt.Rows[x]["BoardId"]); //this needs to be the BoardId from ACSSendCmeDataBrokerBoard
-                           
+                            var sqlSubjects = "SELECT * FROM vwACSCMEDataBrokerBoardSubject WHERE Active = 1 AND ACSCMEDataBrokerBoard_BoardId = " + idboard;
+                            var dtComponents = DataAction.GetDataTable(sqlSubjects, IAptifyDataAction.DSLCacheSetting.BypassCache);
 
                             child.Boards.Add(new Board
                             {
-                                id_board = idboard
+                                id_board = idboard,
+                                Components = board.Components
 
                             }); //end Board add
+
+                            for (int intx = 0; intx < dtComponents.Rows.Count; intx++)
+                            {
+                                int boardSubTypeId = Convert.ToInt32(dtComponents.Rows[intx]["ACSCMESubType_ID"]);
+                                if (subTypeId == boardSubTypeId)
+                                {
+                                    
+                                    board.Components.Add(new Component
+                                        { 
+                                        cd_subject_area = Convert.ToString(dtComponents.Rows[intx]["SubjectAreaCode"]), //this needs to be the SubjectAreaCode from ACSSendCmeDataBrokerBoardSubject
+                                        am_app_hours = Convert.ToDecimal(cmeMaxCredits), //cme_max_credits from ACSCMEEvent
+                                        cd_profession = Convert.ToString(dtComponents.Rows[intx]["ProfessionCode"]), //this needs to include both MD and DO professions from ACSSendCmeDataBrokerBoardSubject
+                                        });
+                                }
+                            }
                         }
 
                     } //end if selected
