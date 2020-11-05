@@ -441,16 +441,52 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 var subTypeId = Convert.ToInt32(EventGE.GetValue("CMETypeId"));
                 var cmeMaxCredits = Convert.ToDecimal(EventGE.GetValue("cme_max_credits"));
                 string enddate = Convert.ToString(EventGE.GetValue("cme_end_date"));
-                int eventTypeId = Convert.ToInt32(EventGE.GetValue("EventType"));
+                int eventTypeId = Convert.ToInt32(EventGE.GetValue("EventType")); 
+                int programId = Convert.ToInt32(EventGE.GetValue("program"));
+                string cmeProgram = Convert.ToString(EventGE.GetValue("cme_program"));
+                string brokerDeliveryMethodType = Convert.ToString(EventGE.GetValue("BrokerDeliveryMethodType"));
                 if (eventTypeId == 1)
                 {
                     courseType = "LIVE"; //EventType from ACSCMEEvent 1 = Live
-                    deliveryMethod = "CLASS"; //Education needs to decide how to define this as wee need to start tracking this in ACSCMEEvent
+                    if (brokerDeliveryMethodType == "")
+                    {
+                        if (programId == 106 || programId == 103 || programId == 101 || programId == 94 ||
+                            programId == 90 || programId == 86 || programId == 78 || programId == 82) 
+                        {
+                            deliveryMethod = "CONF";
+                        } 
+                        else if (cmeProgram.ToLower().Contains("grand round"))
+                        {
+                            deliveryMethod = "GR";
+                        }
+                        else
+                        {
+                            deliveryMethod = "CLASS";
+                        }
+                    }
+                    else
+                    {
+                        deliveryMethod = brokerDeliveryMethodType;
+                    }
                 }
-                else
+                else //EventType is not 'live'
                 {
                     courseType = "ANYTIME"; //EventType from ACSCMEEvent != 1
-                    deliveryMethod = "HOMESTUDY"; //Education needs to decide how to define this as wee need to start tracking this in ACSCMEEvent
+                    if (brokerDeliveryMethodType == "")
+                    {
+                        if (programId == 36 || programId == 93 || programId == 47 || programId == 88)
+                        {
+                            deliveryMethod = "PJ";
+                        }
+                        else
+                        {
+                            deliveryMethod = "EC";
+                        }
+                    }
+                    else
+                    {
+                        deliveryMethod = brokerDeliveryMethodType;
+                    }
                 }
 
                 if (enddate.Length == 0)
