@@ -78,7 +78,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 if (EventTypeId == 13) //Other events
                 { 
                     EventGE.SetValue("BrokerDeliveryMethodType", "ANYTIME");
-                }
+                } 
 
                 if (Convert.ToString(AcsCmeEventGE.GetValue("CME_Program")) == "%Ground Roun%")
                 {
