@@ -15,7 +15,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         private string m_sResult = "SUCCESS";
         AptifyGenericEntity AcsCmeEventGE;
         AptifyGenericEntityBase EventGE;
-        public virtual DataAction DataAction
+        public virtual DataAction DataAction  
         {
             get
             {
