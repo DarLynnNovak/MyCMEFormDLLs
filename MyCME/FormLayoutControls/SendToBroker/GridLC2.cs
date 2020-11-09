@@ -38,8 +38,10 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         public string concurrent;
         public string cd_delivery_method; //Education needs to define this for us and start tracking in the event
         public string course_process; //COURSEXML = new course; RESUBMITHRSXML = new effective date on an existing course
-        public DateTime dt_start; //cme_start_date goes here
-        public DateTime dt_end; //cme_end_date goes here unless null, then cme_start_date goes here
+        public string dt_start;
+        public string dt_end;
+        //public DateTime dt_start; //cme_start_date goes here
+        //public DateTime dt_end; //cme_end_date goes here unless null, then cme_start_date goes here
         public List<board> course_board { get; set; }
     }
 
@@ -237,7 +239,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 }
                 if (result == "Success")
                 {
-                    //SaveAttachmentBlob();
+                    SaveAttachmentBlob();
                 }
             }
 
@@ -254,8 +256,8 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 dp[0] = m_oda.GetDataParameter("@ID", SqlDbType.BigInt, attachId);
                 dp[1] = m_oda.GetDataParameter("@BLOBData", SqlDbType.Image, data.Length, data);
                 m_oda.ExecuteNonQueryParametrized("Aptify.dbo.spInsertAttachmentBlob", CommandType.StoredProcedure, dp);
-                RemoveLocalFile();
-                //SaveForm();
+               
+                SaveForm();
 
             }
             catch (Exception ex)
@@ -263,20 +265,22 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 ExceptionManager.Publish(ex);
             }
         }
-        //private void SaveForm()
-        //{
-        //    try
-        //    {
-        //        //this.FormTemplateContext.GE.SetValue("XmlData", Convert.ToString(xDoc));
-        //        //this.FormTemplateContext.GE.Save();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        ExceptionManager.Publish(ex);
-        //    }
-        //}
-     
-       
+        private void SaveForm()
+        {
+            try
+            {
+                String xmlText = File.ReadAllText(saveLocation);
+                this.FormTemplateContext.GE.SetValue("XmlData", Convert.ToString(xmlText));
+                this.FormTemplateContext.GE.Save();
+                RemoveLocalFile();
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.Publish(ex);
+            }
+        }
+
+
         public DataGridView CreateGrid()
         {
             try
@@ -376,7 +380,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 
                     //xDoc.Save(saveLocation);
 
-                    //CreateAttachment();
+                    //CreateAttachment(); 
                     break;
             }
         }//End BtnClick
@@ -414,7 +418,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 //Serializes the Courses, and closes the TextWriter.
                 serializer.Serialize(writer, courses);
                 writer.Close();
-
+                CreateAttachment();
                 // CreateRecordSent();
                 // MessageBox.Show("Selected Values" + message);
 
@@ -475,10 +479,11 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     concurrent = null, //used only for advertising with CE Broker
                     cd_delivery_method = deliveryMethod,
                     course_process = "CourseXML", //If this is not a new course being submitted to CE Broker RESUBMITHRSXML
-                    dt_start = Convert.ToDateTime(EventGE.GetValue("cme_start_date")), //cme_start_date goes here
-                    dt_end = endDate,
+
+                    dt_start = Convert.ToDateTime(EventGE.GetValue("cme_start_date")).ToString("MM/dd/yyyy"), //cme_start_date goes here
+                    dt_end = Convert.ToDateTime(endDate).ToString("MM/dd/yyyy"), //changed this to convert
                     course_board = course.course_board
-                });
+                }); 
 
                 //BoardGE = m_oApp.GetEntityObject("ACSCMEDataBrokerBoard");
 
@@ -601,7 +606,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 if (System.IO.File.Exists(FileToDelete) == true)
                 {
                     System.IO.File.Delete(FileToDelete);
-                    MessageBox.Show("File Deleted");
+                   // MessageBox.Show("File Deleted");
                 }
             }
             catch (Exception ex)
@@ -610,7 +615,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         }
 
         private void HeaderCheckBox_Clicked(object sender, EventArgs e)
-        {
+        { 
             
             //Necessary to end the edit mode of the Cell.
             grdRecordSearch.EndEdit();
