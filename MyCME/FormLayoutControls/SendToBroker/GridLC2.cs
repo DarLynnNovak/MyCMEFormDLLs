@@ -11,10 +11,17 @@ using System.IO;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-
+using System.Net.Http;
+using System.Net;
+using System.Collections.Specialized;
+using System.Xml;
+using System.Text;
+using System.Web;
 
 namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 {
+
+
     [Serializable]
     [XmlRoot("courses")]
     public class Courses
@@ -74,13 +81,15 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         private DataGridView grdRecordSearch;
         private DataTable _recordSearchDT;
         private bool _boolAdded;
-
+        private static readonly HttpClient client = new HttpClient();
+        public string InXML = "";
         byte[] data;
         CheckBox headerCheckBox = new CheckBox();
         DataGridViewCheckBoxCell recordCheckBox = new DataGridViewCheckBoxCell();
         XDocument xDoc = new XDocument();
         static string saveLocalPrefix = "C:\\Users\\Public\\Documents\\";
         static string fileName = "XmlEventCourses" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".xml";
+        //static string fileName = "XmlEventCourses20201105_1156.xml"; //changed for testing change back to abve
         string attachmentCatIdSql;
         string entityIdSql;
         int eventId;
@@ -101,8 +110,8 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         private AptifyGenericEntityBase EventGE;
         private AptifyGenericEntityBase BoardGE;
         private AptifyGenericEntityBase ComponentGE;
-
-
+        private string url = "";
+        private string service = "";
         public void Config()
         {
             try
@@ -110,6 +119,22 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 m_oApp = ApplicationObject;
                 this.m_oda = new Aptify.Framework.DataServices.DataAction(this.m_oApp.UserCredentials);
                 userId = m_oda.UserCredentials.AptifyUserID;
+
+                //If m_oda.UserCredentials.Server.ToLower = "aptify" Then
+                if (m_oda.UserCredentials.Server.ToLower() == "aptify")
+                {
+
+                }
+                if (m_oda.UserCredentials.Server.ToLower() == "stagingaptify61")
+                {
+
+                }
+                if (m_oda.UserCredentials.Server.ToLower() == "testaptify610")
+                {
+                    url = "https://test.webservices.cebroker.com/";
+                    service = "CEBrokerWebService.asmx/UploadXMLString";
+                }
+
             }
             catch (Exception ex)
             {
@@ -265,14 +290,64 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 ExceptionManager.Publish(ex);
             }
         }
+
+       
         private void SaveForm()
-        {
+        { 
             try
             {
                 String xmlText = File.ReadAllText(saveLocation);
-                this.FormTemplateContext.GE.SetValue("XmlData", Convert.ToString(xmlText));
+ 
+                InXML = Convert.ToString(xmlText);
+
+                using (var wb = new WebClient())
+                {
+                    var data = new NameValueCollection();
+                    data["InXML"] = InXML;
+
+                    //wb.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
+                    
+                    var response = wb.UploadValues(url + service, "POST", data);
+                    string responseInString = System.Text.Encoding.UTF8.GetString(response);
+
+                    string responseInString1 = responseInString.Replace("&lt;","\n<" );
+                    string responseInString2 = responseInString1.Replace("&gt;", ">");
+
+                    XDocument xdoc = new XDocument();
+                    xdoc = XDocument.Parse(responseInString2);
+
+                    
+                    string toFind1 = "ErrorCode=\"";
+                    string toFind2 = "\" Message";
+                    
+                    string str; 
+                    string[] strArr;
+                    int i;
+
+                    str = responseInString2;
+                    char[] splitchar = { '\n' };
+                    strArr = str.Split(splitchar);
+                    for (i = 0; i <= strArr.Length - 1; i++)
+                    {
+                        if (strArr[i].Contains("ErrorCode=\""))
+                        {
+                            int start = strArr[i].IndexOf(toFind1) + toFind1.Length;
+                            int end = strArr[i].IndexOf(toFind2, start); //Start after the index of 'my' since 'is' appears twice
+                            string ErrorCode = strArr[i].Substring(start, end - start);
+
+                            if (ErrorCode != "")
+                            {
+                                MessageBox.Show(ErrorCode);
+                            }
+                        }
+                    }
+                    this.FormTemplateContext.GE.SetValue("XmlResponse", xdoc);
+
+                }
+
+                this.FormTemplateContext.GE.SetValue("XmlData", Convert.ToString(xmlText));              
                 this.FormTemplateContext.GE.Save();
-                RemoveLocalFile();
+                // RemoveLocalFile();
             }
             catch (Exception ex)
             {
@@ -375,12 +450,10 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
             switch (answer)
             {
                 case DialogResult.Yes:
-
+                   // SaveForm();
                     findSelectedRecords();
 
-                    //xDoc.Save(saveLocation);
 
-                    //CreateAttachment(); 
                     break;
             }
         }//End BtnClick
@@ -399,6 +472,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 Courses courses = new Courses();
                 courses.id_parent_provider = Convert.ToInt32(dt.Rows[0]["ProviderId"]);
                 courses.upload_key = Convert.ToString(dt.Rows[0]["UploadKey"]); //need to get the upload_key number from the CE Broker
+
                 courses.course = new List<course>();
 
                 //create datatable of IDs to Insert into the 
@@ -419,8 +493,8 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 serializer.Serialize(writer, courses);
                 writer.Close();
                 CreateAttachment();
-                // CreateRecordSent();
-                // MessageBox.Show("Selected Values" + message);
+                CreateRecordSent();
+                 //MessageBox.Show("Selected Values" + data);
 
             }
             catch (Exception ex)
@@ -431,8 +505,10 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 
         private void CreateXml(int eventId, string filename, Courses courses,  int providerid) //Need EventId pulled in to get the event information for processing
         {
+                
             try
             {
+
                 //course = new List<course>();
                 //board board = new board();
                 //component component = new component();
@@ -636,8 +712,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         {
             RecordSearch();
         }
-
-
+     
     }//End Class
 
 }//End Namespace
