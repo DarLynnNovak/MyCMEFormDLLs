@@ -67,7 +67,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         public string cd_profession; //MD or DO depending on what doctor is
     }
 
-    public class GridLC2 : FormTemplateLayout
+    public class SendCEEvent : FormTemplateLayout 
     {
         private AptifyProperties m_oProps = new AptifyProperties();
         private AptifyApplication m_oApp = new AptifyApplication();
@@ -337,7 +337,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 
                             if (ErrorCode != "")
                             {
-                                MessageBox.Show(ErrorCode);
+                                //MessageBox.Show(ErrorCode);
                             }
                         }
                     }
@@ -644,12 +644,27 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 
             try
             {
-
+                var sql = "select * from acscmecebrokerdata where ACSCMEEventId = " + eventId + " and resubmitevent = 1";
+                var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
                 //need to get the file that gets created and read it back into
 
-                BrokerDataGE = m_oApp.GetEntityObject("ACSCMECEBrokerData", -1);
-                BrokerDataGE.SetValue("ACSCMEEventId", eventId);
-                BrokerDataGE.SetValue("ACSCMESendToBrokerId", recordId);
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        BrokerDataGE = m_oApp.GetEntityObject("ACSCMECEBrokerData", Convert.ToInt64(dt.Rows[0]["ID"].ToString()));
+                        BrokerDataGE.SetValue("ResubmitEvent", 0);
+
+                    }
+                }
+                else
+                {
+                    BrokerDataGE = m_oApp.GetEntityObject("ACSCMECEBrokerData", -1);
+                    BrokerDataGE.SetValue("ACSCMEEventId", eventId);
+                    BrokerDataGE.SetValue("ACSCMESendToBrokerId", recordId);
+                }
+
+                
                 if (!BrokerDataGE.Save(false))
                 {
                     result = "Error";
