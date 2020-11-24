@@ -23,49 +23,36 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 
 
     [Serializable]
-    [XmlRoot("courses")]
-    public class Courses
+    [XmlRoot("rosters")]
+    public class Rosters
     {
         [XmlAttribute] public int id_parent_provider;
         [XmlAttribute] public string upload_key;
         [XmlElement]
-        public List<course> course { get; set; }
+        public List<attendees> attendees { get; set; }
     }
 
     [Serializable]
-    public class course
+    public class attendees
     {
-        public int id_provider;
-        public int provider_course_code; 
-        public string nm_course; //event name
-        public string ds_course; //event cme_program
-        public string cd_course_type; //if eventType != Live then Anytime
-        public string series;
-        public string modular;
-        public string concurrent;
-        public string cd_delivery_method; //Education needs to define this for us and start tracking in the event
-        public string course_process; //COURSEXML = new course; RESUBMITHRSXML = new effective date on an existing course
-        public string dt_start;
-        public string dt_end;
-        //public DateTime dt_start; //cme_start_date goes here
-        //public DateTime dt_end; //cme_end_date goes here unless null, then cme_start_date goes here
-        public List<board> course_board { get; set; }
+        public string license_professional;
+        public string license; 
+        public string cebroker_state; //event name
+        public string first_name; //event cme_program
+        public string last_name; //if eventType != Live then Anytime
+        public string date_completed;
+        public List<partial_credit> partial_credit { get; set; }
     }
 
     [Serializable]
-    public class board
+    public class partial_credit
     {
-        public int id_board; //locate BoardId from ACSCMEDataBrokerBoard
-        public List<component> board_component { get; set; }
+        public string cd_profession; //locate BoardId from ACSCMEDataBrokerBoard
+        public string cd_subject_area;
+        public decimal partial_credit_hours;
     }
 
-    [Serializable]
-    public class component
-    {
-        public string cd_subject_area; //locate SubjectAreaCode from ACSCMEDataBrokerBoardSubject
-        public decimal am_app_hours; // CME_Max_Credits from ACSCMEEvent 
-        public string cd_profession; //MD or DO depending on what doctor is
-    }
+  
 
     public class SendCEPerson : FormTemplateLayout
     {
@@ -469,11 +456,11 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 XmlSerializer serializer = new XmlSerializer(typeof(Courses));
                 TextWriter writer = new StreamWriter(saveLocation);
                 //Create Courses XML
-                Courses courses = new Courses();
-                courses.id_parent_provider = Convert.ToInt32(dt.Rows[0]["ProviderId"]);
-                courses.upload_key = Convert.ToString(dt.Rows[0]["UploadKey"]); //need to get the upload_key number from the CE Broker
+                Rosters rosters = new Rosters();
+                rosters.id_parent_provider = Convert.ToInt32(dt.Rows[0]["ProviderId"]);
+                rosters.upload_key = Convert.ToString(dt.Rows[0]["UploadKey"]); //need to get the upload_key number from the CE Broker
 
-                courses.course = new List<course>();
+                rosters.attendees = new List<attendees>();
 
                 //create datatable of IDs to Insert into the 
                 eventId = 0;
@@ -485,15 +472,15 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                         //eventId += Convert.ToInt32(Environment.NewLine);
                         //eventId += Convert.ToInt32(row.Cells["ID"].Value.ToString());
                         eventId = Convert.ToInt32(row.Cells["ID"].Value.ToString());
-                        CreateXml(eventId, saveLocation, courses, courses.id_parent_provider);
+                        CreateXml(eventId, saveLocation, rosters, rosters.id_parent_provider);
                     }
                 }
 
                 //Serializes the Courses, and closes the TextWriter.
-                serializer.Serialize(writer, courses);
+                serializer.Serialize(writer, rosters);
                 writer.Close();
-                CreateAttachment();
-                CreateRecordSent();
+                //CreateAttachment();
+                //CreateRecordSent();
                  //MessageBox.Show("Selected Values" + data);
 
             }
@@ -503,15 +490,12 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
             }
         }
 
-        private void CreateXml(int eventId, string filename, Courses courses,  int providerid) //Need EventId pulled in to get the event information for processing
+        private void CreateXml(int eventId, string filename, Rosters rosters,  int providerid) //Need EventId pulled in to get the event information for processing
         {
                 
             try
             {
-
-                //course = new List<course>();
-                //board board = new board();
-                //component component = new component();
+          
                 course course = new course();
                 course.course_board = new List<board>();
                 string courseType = "";
