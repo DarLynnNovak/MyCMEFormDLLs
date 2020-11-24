@@ -54,7 +54,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 
   
 
-    public class SendCEPerson : FormTemplateLayout
+    public class SendPersonCME : FormTemplateLayout
     {
         private AptifyProperties m_oProps = new AptifyProperties();
         private AptifyApplication m_oApp = new AptifyApplication();
@@ -370,7 +370,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         {
             try
             {
-                searchRecordSql = "select ID, Name, CME_Start_Date, CME_End_Date,CME_Program, CME_Max_Credits FROM ACSCMEEvent WHERE convert(date, cme_start_date, 120) >= convert(date, '" + _eventStartDate.Value + "', 101) AND convert(date, cme_start_date,120) <= convert(date, '" + _eventEndDate.Value + "', 101) AND ID NOT In(SELECT ACSCMEEventId FROM ACSCMECEBrokerData WHERE ReSubmitEvent = 0)";
+                searchRecordSql = "select ID, PersonID, CMEDateGranted FROM ACSPersonCME WHERE convert(date, CMEDateGranted, 120) >= convert(date, '" + _eventStartDate.Value + "', 101) AND convert(date, CMEDateGranted, 120) <= convert(date, '" + _eventEndDate.Value + "', 101)";
                 _recordSearchDT = m_oda.GetDataTable(searchRecordSql);
                 if (_recordSearchDT.Rows.Count > 0)
                 {
@@ -453,9 +453,9 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
                 // Creates an instance of the XmlSerializer class;
                 // specifies the type of object to serialize.
-                XmlSerializer serializer = new XmlSerializer(typeof(Courses));
+                XmlSerializer serializer = new XmlSerializer(typeof(Rosters));
                 TextWriter writer = new StreamWriter(saveLocation);
-                //Create Courses XML
+                //Create Roster XML
                 Rosters rosters = new Rosters();
                 rosters.id_parent_provider = Convert.ToInt32(dt.Rows[0]["ProviderId"]);
                 rosters.upload_key = Convert.ToString(dt.Rows[0]["UploadKey"]); //need to get the upload_key number from the CE Broker
@@ -495,27 +495,16 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 
             try
             {
-          
-                course course = new course();
-                course.course_board = new List<board>();
-                string courseType = "";
-                string deliveryMethod = "";
+
+                Rosters roster = new Rosters();
+                roster.attendees = new List<attendees>();
                 DateTime endDate;
                 EventGE = m_oApp.GetEntityObject("ACSCMEEvent", eventId);
                 var subTypeId = Convert.ToInt32(EventGE.GetValue("CMETypeId"));
                 var cmeMaxCredits = Convert.ToDecimal(EventGE.GetValue("cme_max_credits"));
                 string enddate = Convert.ToString(EventGE.GetValue("cme_end_date"));
                 int eventTypeId = Convert.ToInt32(EventGE.GetValue("EventType"));
-                if (eventTypeId == 1)
-                {
-                    courseType = "LIVE"; //EventType from ACSCMEEvent 1 = Live
-                    deliveryMethod = "CLASS"; //Education needs to decide how to define this as wee need to start tracking this in ACSCMEEvent
-                }
-                else
-                {
-                    courseType = "ANYTIME"; //EventType from ACSCMEEvent != 1
-                    deliveryMethod = "HOMESTUDY"; //Education needs to decide how to define this as wee need to start tracking this in ACSCMEEvent
-                }
+                
 
                 if (enddate.Length == 0)
                 {
@@ -527,7 +516,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 }
 
                 //Create new element course
-                courses.course.Add(new course
+                rosters.attendees.Add(new attendees
                 {
                     id_provider = providerid,
                     provider_course_code = eventId, //EventId from the ACSCMEEvent 
@@ -543,11 +532,11 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     dt_start = Convert.ToDateTime(EventGE.GetValue("cme_start_date")).ToString("MM/dd/yyyy"), //cme_start_date goes here
                     dt_end = Convert.ToDateTime(endDate).ToString("MM/dd/yyyy"), //changed this to convert
                     course_board = course.course_board
-                }); 
+                });
 
                 //BoardGE = m_oApp.GetEntityObject("ACSCMEDataBrokerBoard");
 
-                CreateBoard(course, subTypeId, cmeMaxCredits);
+                CreatePartialCredit(course, subTypeId, cmeMaxCredits);
             }
             catch (Exception ex)
             {
@@ -555,7 +544,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
             }
         }
 
-        private void CreateBoard(course course, int subTypeId, decimal cmeMaxCredits)
+        private void CreatePartialCredit(course course, int subTypeId, decimal cmeMaxCredits)
         {
             var sql = "SELECT BoardId, Name FROM vwACSCMEDataBrokerBoard WHERE ACSCMEDataBrokerReporter_Name = 'CE Broker' AND Active = 1";
             var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
