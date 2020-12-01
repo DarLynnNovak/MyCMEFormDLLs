@@ -23,38 +23,51 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 
 
     [Serializable]
-    [XmlRoot("rosters")]
-    public class Rosters
+    [XmlRoot("courses")]
+    public class Courses
     {
         [XmlAttribute] public int id_parent_provider;
         [XmlAttribute] public string upload_key;
         [XmlElement]
-        public List<attendees> attendees { get; set; }
+        public List<course> course { get; set; }
     }
 
     [Serializable]
-    public class attendees
+    public class course
     {
-        public string license_professional;
-        public string license; 
-        public string cebroker_state; //event name
-        public string first_name; //event cme_program
-        public string last_name; //if eventType != Live then Anytime
-        public string date_completed;
-        public List<partial_credit> partial { get; set; }
+        public int id_provider;
+        public int provider_course_code; 
+        public string nm_course; //event name
+        public string ds_course; //event cme_program
+        public string cd_course_type; //if eventType != Live then Anytime
+        public string series;
+        public string modular;
+        public string concurrent;
+        public string cd_delivery_method; //Education needs to define this for us and start tracking in the event
+        public string course_process; //COURSEXML = new course; RESUBMITHRSXML = new effective date on an existing course
+        public string dt_start;
+        public string dt_end;
+        //public DateTime dt_start; //cme_start_date goes here
+        //public DateTime dt_end; //cme_end_date goes here unless null, then cme_start_date goes here
+        public List<board> course_board { get; set; }
     }
 
     [Serializable]
-    public class partial_credit
+    public class board
     {
-        public string cd_profession; //locate BoardId from ACSCMEDataBrokerBoard
-        public string cd_subject_area;
-        public decimal partial_credit_hours;
+        public int id_board; //locate BoardId from ACSCMEDataBrokerBoard
+        public List<component> board_component { get; set; }
     }
 
-  
+    [Serializable]
+    public class component
+    {
+        public string cd_subject_area; //locate SubjectAreaCode from ACSCMEDataBrokerBoardSubject
+        public decimal am_app_hours; // CME_Max_Credits from ACSCMEEvent 
+        public string cd_profession; //MD or DO depending on what doctor is
+    }
 
-    public class SendPersonCME : FormTemplateLayout
+    public class SendCEEventFinal : FormTemplateLayout 
     {
         private AptifyProperties m_oProps = new AptifyProperties();
         private AptifyApplication m_oApp = new AptifyApplication();
@@ -75,7 +88,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         DataGridViewCheckBoxCell recordCheckBox = new DataGridViewCheckBoxCell();
         XDocument xDoc = new XDocument();
         static string saveLocalPrefix = "C:\\Users\\Public\\Documents\\";
-        static string fileName = "XmlPersonCME" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".xml";
+        static string fileName = "XmlEventCourses" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".xml";
         //static string fileName = "XmlEventCourses20201105_1156.xml"; //changed for testing change back to abve
         string attachmentCatIdSql;
         string entityIdSql;
@@ -94,7 +107,6 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         long userId;
 
         public CheckBox HeaderCheckBox { get; private set; }
-        private AptifyGenericEntityBase ACSPersonCMEGE;
         private AptifyGenericEntityBase EventGE;
         private AptifyGenericEntityBase BoardGE;
         private AptifyGenericEntityBase ComponentGE;
@@ -162,19 +174,19 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
             {
                 if (_sendToBrokerBtn == null || _sendToBrokerBtn.IsDisposed)
                 {
-                    _sendToBrokerBtn = GetFormComponentByLayoutKey(this, "ACS.ACSCMESendToBroker.Form.Active Button.1") as AptifyActiveButton;
+                    _sendToBrokerBtn = GetFormComponentByLayoutKey(this, "ACSCMEEventsSendToBroker Records To Send.Active Button.1") as AptifyActiveButton;
                 }
                 if (_senderIdLinkBox == null || _senderIdLinkBox.IsDisposed)
                 {
-                    _senderIdLinkBox = GetFormComponentByLayoutKey(this, "ACS.ACSCMESendToBroker.Form.SenderId") as AptifyLinkBox;
+                    _senderIdLinkBox = GetFormComponentByLayoutKey(this, "ACS.ACSCMEEventsSendToBroker.Form.SenderId") as AptifyLinkBox;
                 }
                 if (_eventStartDate == null || _eventStartDate.IsDisposed)
                 {
-                    _eventStartDate = GetFormComponentByLayoutKey(this, "ACSCMESendToBroker.EventStartDate") as AptifyTextBox;
+                    _eventStartDate = GetFormComponentByLayoutKey(this, "ACSCMEEventsSendToBroker Records To Send.EventStartDate") as AptifyTextBox;
                 }
                 if (_eventEndDate == null || _eventEndDate.IsDisposed)
                 {
-                    _eventEndDate = GetFormComponentByLayoutKey(this, "ACSCMESendToBroker.EventEndDate") as AptifyTextBox;
+                    _eventEndDate = GetFormComponentByLayoutKey(this, "ACSCMEEventsSendToBroker Records To Send.EventEndDate") as AptifyTextBox;
                 }
 
                 if (_sendToBrokerBtn != null)
@@ -371,7 +383,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         {
             try
             {
-                searchRecordSql = "select ID, PersonID, CMEDateGranted FROM ACSPersonCME WHERE convert(date, CMEDateGranted, 120) >= convert(date, '" + _eventStartDate.Value + "', 101) AND convert(date, CMEDateGranted, 120) <= convert(date, '" + _eventEndDate.Value + "', 101) and PersonID = " + userId;
+                searchRecordSql = "select ID, Name, CME_Start_Date, CME_End_Date,CME_Program, CME_Max_Credits FROM ACSCMEEvent WHERE convert(date, cme_start_date, 120) >= convert(date, '" + _eventStartDate.Value + "', 101) AND convert(date, cme_start_date,120) <= convert(date, '" + _eventEndDate.Value + "', 101) AND ID NOT In(SELECT ACSCMEEventId FROM ACSCMECEBrokerData WHERE ReSubmitEvent = 0)";
                 _recordSearchDT = m_oda.GetDataTable(searchRecordSql);
                 if (_recordSearchDT.Rows.Count > 0)
                 {
@@ -454,14 +466,14 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
                 // Creates an instance of the XmlSerializer class;
                 // specifies the type of object to serialize.
-                XmlSerializer serializer = new XmlSerializer(typeof(Rosters));
+                XmlSerializer serializer = new XmlSerializer(typeof(Courses));
                 TextWriter writer = new StreamWriter(saveLocation);
-                //Create Roster XML
-                Rosters rosters = new Rosters();
-                rosters.id_parent_provider = Convert.ToInt32(dt.Rows[0]["ProviderId"]);
-                rosters.upload_key = Convert.ToString(dt.Rows[0]["UploadKey"]); //need to get the upload_key number from the CE Broker
+                //Create Courses XML
+                Courses courses = new Courses();
+                courses.id_parent_provider = Convert.ToInt32(dt.Rows[0]["ProviderId"]);
+                courses.upload_key = Convert.ToString(dt.Rows[0]["UploadKey"]); //need to get the upload_key number from the CE Broker
 
-                rosters.attendees = new List<attendees>();
+                courses.course = new List<course>();
 
                 //create datatable of IDs to Insert into the 
                 eventId = 0;
@@ -472,16 +484,16 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     {
                         //eventId += Convert.ToInt32(Environment.NewLine);
                         //eventId += Convert.ToInt32(row.Cells["ID"].Value.ToString());
-                        eventId = Convert.ToInt32(row.Cells["ACSCMEEventID"].Value.ToString());
-                        CreateXml(eventId, saveLocation, rosters, rosters.id_parent_provider);
+                        eventId = Convert.ToInt32(row.Cells["ID"].Value.ToString());
+                        CreateXml(eventId, saveLocation, courses, courses.id_parent_provider);
                     }
                 }
 
                 //Serializes the Courses, and closes the TextWriter.
-                serializer.Serialize(writer, rosters);
+                serializer.Serialize(writer, courses);
                 writer.Close();
-                //CreateAttachment();
-                //CreateRecordSent();
+                CreateAttachment();
+                CreateRecordSent();
                  //MessageBox.Show("Selected Values" + data);
 
             }
@@ -491,37 +503,67 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
             }
         }
 
-        private void CreateXml(int eventId, string filename, Rosters rosters,  int providerid) //Need EventId pulled in to get the event information for processing
+        private void CreateXml(int eventId, string filename, Courses courses,  int providerid) //Need EventId pulled in to get the event information for processing
         {
                 
             try
             {
 
-                Rosters roster = new Rosters();
-                roster.attendees = new List<attendees>();
-                
-                
-                ACSPersonCMEGE = m_oApp.GetEntityObject("ACSPersonCME", userId);
-                eventId = Convert.ToInt32(ACSPersonCMEGE.GetValue("ACSCMEEventId"));
+                //course = new List<course>();
+                //board board = new board();
+                //component component = new component();
+                course course = new course();
+                course.course_board = new List<board>();
+                string courseType = "";
+                string deliveryMethod = "";
+                DateTime endDate;
                 EventGE = m_oApp.GetEntityObject("ACSCMEEvent", eventId);
-                var CMETypeOne = Convert.ToInt32(ACSPersonCMEGE.GetValue("CMEType1"));
+                var subTypeId = Convert.ToInt32(EventGE.GetValue("CMETypeId"));
                 var cmeMaxCredits = Convert.ToDecimal(EventGE.GetValue("cme_max_credits"));
-                //string enddate = Convert.ToString(ACSPersonCMEGE.GetValue("cme_end_date"));
-                //int eventTypeId = Convert.ToInt32(ACSPersonCMEGE.GetValue("EventType"));
-                
-                //Create new element course
-                rosters.attendees.Add(new attendees
+                string enddate = Convert.ToString(EventGE.GetValue("cme_end_date"));
+                int eventTypeId = Convert.ToInt32(EventGE.GetValue("EventType"));
+                if (eventTypeId == 1)
                 {
-                    license_professional = "",
-                    license = "",
-                    cebroker_state = "",
-                    first_name = "",
-                    last_name = "",
-                    date_completed = Convert.ToDateTime(ACSPersonCMEGE.GetValue("cmedategranted")).ToString("MM/dd/yyyy"),
-                    partial = new List<partial_credit> ()
-                });
+                    courseType = "LIVE"; //EventType from ACSCMEEvent 1 = Live
+                    deliveryMethod = "CLASS"; //Education needs to decide how to define this as wee need to start tracking this in ACSCMEEvent
+                }
+                else
+                {
+                    courseType = "ANYTIME"; //EventType from ACSCMEEvent != 1
+                    deliveryMethod = "HOMESTUDY"; //Education needs to decide how to define this as wee need to start tracking this in ACSCMEEvent
+                }
 
-              //  CreatePartialCredit(attendees, cmeMaxCredits);
+                if (enddate.Length == 0)
+                {
+                    endDate = Convert.ToDateTime(EventGE.GetValue("cme_start_date"));
+                }
+                else
+                {
+                    endDate = Convert.ToDateTime(EventGE.GetValue("cme_end_date")); //If cme_end_date is null use cme_start_date
+                }
+
+                //Create new element course
+                courses.course.Add(new course
+                {
+                    id_provider = providerid,
+                    provider_course_code = eventId, //EventId from the ACSCMEEvent 
+                    nm_course = Convert.ToString(EventGE.GetValue("Name")), //Name from the ACSCMEEvent
+                    ds_course = Convert.ToString(EventGE.GetValue("Cme_Program")), //Cme_Program from the ACSCMEEvent
+                    cd_course_type = courseType,
+                    series = null, //used only for advertising with CE Broker
+                    modular = null, //used only for advertising with CE Broker
+                    concurrent = null, //used only for advertising with CE Broker
+                    cd_delivery_method = deliveryMethod,
+                    course_process = "CourseXML", //If this is not a new course being submitted to CE Broker RESUBMITHRSXML
+
+                    dt_start = Convert.ToDateTime(EventGE.GetValue("cme_start_date")).ToString("MM/dd/yyyy"), //cme_start_date goes here
+                    dt_end = Convert.ToDateTime(endDate).ToString("MM/dd/yyyy"), //changed this to convert
+                    course_board = course.course_board
+                }); 
+
+                //BoardGE = m_oApp.GetEntityObject("ACSCMEDataBrokerBoard");
+
+                CreateBoard(course, subTypeId, cmeMaxCredits);
             }
             catch (Exception ex)
             {
@@ -529,19 +571,73 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
             }
         }
 
-        //private void CreatePartialCredit(attendees attendees, decimal cmeMaxCredits)
-        //{
-        //    var sql = "SELECT BoardId, Name FROM vwACSCMEDataBrokerBoard WHERE ACSCMEDataBrokerReporter_Name = 'CE Broker' AND Active = 1";
-        //    var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
+        private void CreateBoard(course course, int subTypeId, decimal cmeMaxCredits)
+        {
+            var sql = "SELECT BoardId, Name FROM vwACSCMEDataBrokerBoard WHERE ACSCMEDataBrokerReporter_Name = 'CE Broker' AND Active = 1";
+            var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
 
-        //    //start course_board for loop
-        //    for (int x = 0; x < dt.Rows.Count; x++)
-        //    {
-        //        partial partial_Credit = new partial();
-               
+            //start course_board for loop
+            for (int x = 0; x < dt.Rows.Count; x++)
+            {
+                board board = new board();
+                board.board_component = new List<component>();
+                var exists = "n";
+                int boardId = Convert.ToInt32(dt.Rows[x]["BoardId"]);
+                var sqlSubjects = "SELECT * FROM vwACSCMEDataBrokerBoardSubject WHERE Active = 1 AND ACSCMEDataBrokerBoard_BoardId = " + boardId;
+                var dtComponents = DataAction.GetDataTable(sqlSubjects, IAptifyDataAction.DSLCacheSetting.BypassCache);
+                int boardSubTypeId = 0;
 
-        //    }
-        //}
+                if (boardId > 0)
+                {
+                    course.course_board.Add(new board
+                    {
+                        //int boardId = Convert.ToInt32(dt.Rows[x]["BoardId"]);
+                        id_board = boardId, //this needs to be the BoardId from ACSSendCmeDataBrokerBoard
+                        board_component = board.board_component
+                    });
+
+                    //start board_component for loop
+                    for (int intx = 0; intx < dtComponents.Rows.Count; intx++)
+                    {
+                        component component = new component();
+                        boardSubTypeId = Convert.ToInt32(dtComponents.Rows[intx]["ACSCMESubType_ID"]);
+                        if (subTypeId == boardSubTypeId)
+                        {
+                            board.board_component.Add(new component
+                            {
+                                cd_subject_area = Convert.ToString(dtComponents.Rows[intx]["SubjectAreaCode"]), //this needs to be the SubjectAreaCode from ACSSendCmeDataBrokerBoardSubject
+                                am_app_hours = Convert.ToDecimal(cmeMaxCredits), //cme_max_credits from ACSCMEEvent
+                                cd_profession = Convert.ToString(dtComponents.Rows[intx]["ProfessionCode"]) //this needs to include both MD and DO professions from ACSSendCmeDataBrokerBoardSubject
+                            });
+                            exists = "y";
+                        }
+                    }
+                    //end board_component loop
+
+                    if (exists == "n")
+                    {
+                        component component = new component();
+                        //start board_component for loop
+                        for (int intx = 0; intx < dtComponents.Rows.Count; intx++)
+                        {
+                            boardSubTypeId = Convert.ToInt32(dtComponents.Rows[intx]["ACSCMESubType_ID"]);
+                            if (boardSubTypeId == 32)
+                            {
+                                board.board_component.Add(new component
+                                {
+                                    cd_subject_area = Convert.ToString(dtComponents.Rows[intx]["SubjectAreaCode"]), //this needs to be the SubjectAreaCode from ACSSendCmeDataBrokerBoardSubject
+                                    am_app_hours = Convert.ToDecimal(cmeMaxCredits), //cme_max_credits from ACSCMEEvent
+                                    cd_profession = Convert.ToString(dtComponents.Rows[intx]["ProfessionCode"]) //this needs to include both MD and DO professions from ACSSendCmeDataBrokerBoardSubject
+                                });
+                            }
+                        }
+                    }
+                }
+
+            }
+            //end Course_board loop
+
+        }
 
         private void CreateRecordSent()
         {
