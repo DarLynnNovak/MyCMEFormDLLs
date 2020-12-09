@@ -205,6 +205,7 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="FormLayoutControls\SendToBroker\SendCEEventFinal.cs" />
+    <Compile Include="ProcessComponents\ACSCMEPersonSendtoCESave.cs" />
     <Compile Include="ProcessComponents\ACSCMEPersonSendtoCE.cs" />
     <Compile Include="ProcessComponents\ACSCMEEventSetDeliveryMethod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
