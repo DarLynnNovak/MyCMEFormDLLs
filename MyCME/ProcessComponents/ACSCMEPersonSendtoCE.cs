@@ -73,6 +73,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         private string url = "";
         private string service = "";
         AptifyGenericEntityBase AcsCmeSendToBrokerGE;
+        AptifyGenericEntityBase AcsCmePersonSendToBrokerGE;
         AptifyGenericEntityBase AttachmentsGE;
         AptifyGenericEntityBase EventGE;
         static string saveLocalPrefix = "C:\\Users\\Public\\Documents\\";
@@ -157,17 +158,23 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 url = "https://test.webservices.cebroker.com/";
                 service = "CEBrokerWebService.asmx/UploadXMLString";
             }
-            try
+            try 
             {
-                m_sResult = "SUCCESS"; 
-               
+                m_sResult = "SUCCESS";
 
-                //long RecordId = 0;
-
-                //AcsCmeSendToBrokerGE = (AptifyGenericEntityBase)m_oProps.GetProperty("AcsCmeSendToBrokerGE");  //this is our object being passed in when we save an acs cme event record.
-                //RecordId = Convert.ToInt64(AcsCmeSendToBrokerGE.GetValue("Id"));
                 RecordId = Convert.ToInt64(m_oProps.GetProperty("RecordId"));
-                AcsCmeSendToBrokerGE = m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
+                //long RecordId = 0;
+                if (Convert.ToString(RecordId) != "")
+                {
+                    AcsCmeSendToBrokerGE = m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
+                }
+                else
+                {
+                    AcsCmeSendToBrokerGE = (AptifyGenericEntityBase)m_oProps.GetProperty("AcsCmeSendToBrokerGE");  //this is our object being passed in when we save an acs cme event record.
+                    RecordId  = Convert.ToInt64(AcsCmeSendToBrokerGE.GetValue("Id"));
+                }
+
+              
                 personId = Convert.ToInt64(AcsCmeSendToBrokerGE.GetValue("PersonId"));
                 firstName = Convert.ToString(AcsCmeSendToBrokerGE.GetValue("PersonId_FirstName"));
                 lastName = Convert.ToString(AcsCmeSendToBrokerGE.GetValue("PersonId_LastName"));
@@ -431,11 +438,76 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 ExceptionManager.Publish(ex);
             }
         }
+        private void CreateRecordSent()
+        {
+
+            try
+            {
+                var sql = "select * from acscmecebrokerdata where ACSCMEEventId = " + eventId + " and resubmitevent = 1";
+                var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
+                //need to get the file that gets created and read it back into
+
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMECEBrokerData", Convert.ToInt64(dt.Rows[0]["ID"].ToString()));
+                        AcsCmePersonSendToBrokerGE.SetValue("ResubmitEvent", 0);
+
+                    }
+                }
+                else
+                {
+                    AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMECEBrokerData", -1);
+                    AcsCmePersonSendToBrokerGE.SetValue("ACSCMEEventId", eventId);
+                    AcsCmePersonSendToBrokerGE.SetValue("ACSCMESendToBrokerId", RecordId);
+                }
+
+
+                if (!AcsCmePersonSendToBrokerGE.Save(false))
+                {
+                    m_sResult = "Error";
+                    throw new Exception("Problem Saving broker data Record:" + AcsCmePersonSendToBrokerGE.RecordID);
+
+                }
+                else
+                {
+                    AcsCmePersonSendToBrokerGE.Save(true);
+                    m_sResult = "Success";
+
+                }
+
+            }
+
+            catch (Exception ex)
+            {
+                ExceptionManager.Publish(ex);
+            }
+        }
+        private void RemoveLocalFile()
+        {
+            try
+            {
+                string FileToDelete;
+
+                FileToDelete = saveLocation;
+
+                if (System.IO.File.Exists(FileToDelete) == true)
+                {
+                    System.IO.File.Delete(FileToDelete);
+                    // MessageBox.Show("File Deleted");
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+        }
         private void saveGE()
         {
            AcsCmeSendToBrokerGE = m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
            AcsCmeSendToBrokerGE.SetValue("XmlData", Convert.ToString(xmlText));
            AcsCmeSendToBrokerGE.SetValue("XmlResponse", xdoc);
+            AcsCmeSendToBrokerGE.SetValue("DateSent", Time);
            AcsCmeSendToBrokerGE.Save();
             //if (!AcsCmeSendToBrokerGE.Save(false))
             //{
