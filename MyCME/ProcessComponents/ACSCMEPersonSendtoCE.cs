@@ -81,6 +81,11 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         DateTime dateGranted;
         string saveLocation = saveLocalPrefix + fileName;
         string searchRecordSql;
+        string searchBoardRecordSql;
+        string searchBoardSubjectRecordSql;
+        string searchBoardTranscriptRecordSql;
+        private DataTable searchBoardTranscriptRecord;
+        int boardId;
         string _eventStartDate;
         string _eventEndDate;
         string firstName;
@@ -88,6 +93,8 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         string licenseNumber;
         string licenseeProfession;
         string state;
+        string cdProfession;
+        string cdSubjectArea;
         long personId;
         int eventId;
         decimal cmeType1;
@@ -100,6 +107,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         string entityIdSql;
         byte[] data;
         private DataTable _recordSearchDT;
+        private DataTable _recordBoardSubjectSearchDT;
         DataAction da = new DataAction();
         DateTime Time = DateTime.Now;
         Rosters rosters = new Rosters();
@@ -292,10 +300,38 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     });
 
                 }
-                attendee.partial_credits.Add(new partial_credit
+                searchBoardRecordSql = "select distinct ACSCMEDataBrokerBoard_BoardId from vwACSCMEDataBrokerBoardSubject where ProfessionCode = '" + licenseeProfession + "' and ACSCMEDataBrokerBoard_AuthorizedState = '" +  state + "'";
+                boardId = Convert.ToInt32(m_oda.ExecuteScalar(searchBoardRecordSql));
+                searchBoardSubjectRecordSql = "select * from vwACSCMEDataBrokerBoardSubject where ACSCMEDataBrokerBoard_BoardId = " + boardId + " and ACSCMESubType_ID = " + Convert.ToInt32(EventGE.GetValue("CmeTypeID"));
+                _recordBoardSubjectSearchDT = da.GetDataTable(searchBoardSubjectRecordSql);
+
+                if (_recordBoardSubjectSearchDT.Rows.Count > 0)
                 {
-                      cd_profession = "DN",
-                      cd_subject_area = "GN",
+                    for (int x = 0; x < _recordBoardSubjectSearchDT.Rows.Count; x++)
+                    {
+                        cdProfession = Convert.ToString(_recordBoardSubjectSearchDT.Rows[x]["ProfessionCode"]);
+                        cdSubjectArea = Convert.ToString(_recordBoardSubjectSearchDT.Rows[x]["SubjectAreaCode"]);
+                    }
+                }
+                else
+                {
+                    searchBoardTranscriptRecordSql = "select * from vwACSCMEDataBrokerBoardSubject where ACSCMEDataBrokerBoard_BoardId = " + boardId + " and ACSCMESubType_Name = 'Transcript'";
+                    searchBoardTranscriptRecord = da.GetDataTable(searchBoardTranscriptRecordSql);
+                    if (searchBoardTranscriptRecord.Rows.Count > 0)
+                    {
+                        for (int x = 0; x < searchBoardTranscriptRecord.Rows.Count; x++)
+                        {
+                            cdProfession = Convert.ToString(searchBoardTranscriptRecord.Rows[x]["ProfessionCode"]);
+                            cdSubjectArea = Convert.ToString(searchBoardTranscriptRecord.Rows[x]["SubjectAreaCode"]);
+                        }
+                    }
+                }
+
+                    attendee.partial_credits.Add(new partial_credit
+                {
+                    
+                    cd_profession = cdProfession,
+                      cd_subject_area = cdSubjectArea,
                       partial_credit_hours = cmeType1
                    });
 
