@@ -76,7 +76,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         AptifyGenericEntityBase AcsCmePersonSendToBrokerGE;
         AptifyGenericEntityBase AttachmentsGE;
         AptifyGenericEntityBase EventGE;
-        static string saveLocalPrefix = "C:\\Users\\Public\\Documents\\";
+        static string saveLocalPrefix = @"C:\Users\Public\Documents\";
         static string fileName = "XmlPersonCME" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".xml";
         DateTime dateGranted;
         string saveLocation = saveLocalPrefix + fileName;
@@ -201,7 +201,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 Aptify.Framework.ExceptionManagement.ExceptionManager.Publish(ex);
                 return "FAILED";
             }
-            //MessageBox.Show(Convert.ToString(m_oProps.GetProperty("XmlData")));
+
             return m_sResult;
         }
         private void RecordSearch()
@@ -233,11 +233,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 rosters.upload_key = Convert.ToString(dt.Rows[0]["UploadKey"]); //need to get the upload_key number from the CE Broker
                 rosters.roster = new List<roster>();
 
-                //foreach (DataRow dr in _recordSearchDT.Rows)
-                //{
-                //    eventId = Convert.ToInt32(_recordSearchDT.Rows[0]["ACSCMEEventId"]);
-                //    CreateXml(rosters);
-                //}
                 for (int x = 0; x < _recordSearchDT.Rows.Count; x++)
                 {
                     eventId = Convert.ToInt32(_recordSearchDT.Rows[x]["ACSCMEEventId"]);
@@ -249,9 +244,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     serializer.Serialize(writer, rosters);
                 writer.Close();
                 CreateAttachment();
-                //CreateRecordSent();
-                //MessageBox.Show("Selected Values" + data);
-
             }
             catch (Exception ex)
             {
@@ -334,8 +326,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                       cd_subject_area = cdSubjectArea,
                       partial_credit_hours = cmeType1
                    });
-
-                //  CreatePartialCredit(attendees, cmeMaxCredits);
             }
             catch (Exception ex)
             {
@@ -411,9 +401,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
             try
             {
                 xmlText = File.ReadAllText(saveLocation);
-                //AcsCmeSendToBrokerGE = (AptifyGenericEntityBase)m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
-                //xdoc = new XDocument();
-
                 InXML = Convert.ToString(xmlText);
 
                 using (var wb = new WebClient())
@@ -431,42 +418,11 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
 
 
                     xdoc = XDocument.Parse(responseInString2);
-
-
-                    //string toFind1 = "ErrorCode=\"";
-                    //string toFind2 = "\" Message";
-
-                    //string str;
-                    //string[] strArr;
-                    //int i;
-
-                    //str = responseInString2;
-                    //char[] splitchar = { '\n' };
-                    //strArr = str.Split(splitchar);
-                    //for (i = 0; i <= strArr.Length - 1; i++)
-                    //{
-                    //    if (strArr[i].Contains("ErrorCode=\""))
-                    //    {
-                    //        int start = strArr[i].IndexOf(toFind1) + toFind1.Length;
-                    //        int end = strArr[i].IndexOf(toFind2, start); //Start after the index of 'my' since 'is' appears twice
-                    //        string ErrorCode = strArr[i].Substring(start, end - start);
-
-                    //        if (ErrorCode != "")
-                    //        {
-
-                    //        }
-                    //    }
-                    //}
-                   
-
+                  
                 }
                 saveGE();
-                //m_oProps.SetProperty("XmlData", xmlText);
-                //m_oProps.SetProperty("xdoc", xdoc);
-
                 m_sResult = "SUCCESS";
                
-
                 // RemoveLocalFile();
             }
             catch (Exception ex)
@@ -474,52 +430,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 ExceptionManager.Publish(ex);
             }
         }
-        private void CreateRecordSent()
-        {
-
-            try
-            {
-                var sql = "select * from acscmecebrokerdata where ACSCMEEventId = " + eventId + " and resubmitevent = 1";
-                var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
-                //need to get the file that gets created and read it back into
-
-                if (dt.Rows.Count > 0)
-                {
-                    foreach (DataRow dr in dt.Rows)
-                    {
-                        AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMECEBrokerData", Convert.ToInt64(dt.Rows[0]["ID"].ToString()));
-                        AcsCmePersonSendToBrokerGE.SetValue("ResubmitEvent", 0);
-
-                    }
-                }
-                else
-                {
-                    AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMECEBrokerData", -1);
-                    AcsCmePersonSendToBrokerGE.SetValue("ACSCMEEventId", eventId);
-                    AcsCmePersonSendToBrokerGE.SetValue("ACSCMESendToBrokerId", RecordId);
-                }
-
-
-                if (!AcsCmePersonSendToBrokerGE.Save(false))
-                {
-                    m_sResult = "Error";
-                    throw new Exception("Problem Saving broker data Record:" + AcsCmePersonSendToBrokerGE.RecordID);
-
-                }
-                else
-                {
-                    AcsCmePersonSendToBrokerGE.Save(true);
-                    m_sResult = "Success";
-
-                }
-
-            }
-
-            catch (Exception ex)
-            {
-                ExceptionManager.Publish(ex);
-            }
-        }
+        
         private void RemoveLocalFile()
         {
             try
@@ -531,11 +442,11 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 if (System.IO.File.Exists(FileToDelete) == true)
                 {
                     System.IO.File.Delete(FileToDelete);
-                    // MessageBox.Show("File Deleted");
                 }
             }
             catch (Exception ex)
             {
+                ExceptionManager.Publish(ex);
             }
         }
         private void saveGE()
@@ -543,20 +454,9 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
            AcsCmeSendToBrokerGE = m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
            AcsCmeSendToBrokerGE.SetValue("XmlData", Convert.ToString(xmlText));
            AcsCmeSendToBrokerGE.SetValue("XmlResponse", xdoc);
-            AcsCmeSendToBrokerGE.SetValue("DateSent", Time);
+           AcsCmeSendToBrokerGE.SetValue("DateSent", Time);
            AcsCmeSendToBrokerGE.Save();
-            //if (!AcsCmeSendToBrokerGE.Save(false))
-            //{
-            //    m_sResult = "FAILED";
-            //    throw new Exception("Problem Saving attachments Record:" + AcsCmeSendToBrokerGE.RecordID);
-
-            //}
-            //else
-            //{
-            //    AcsCmeSendToBrokerGE.Save(true);
-
-            //    m_sResult = "SUCCESS";
-            //}
+           
         }
     }
 }
