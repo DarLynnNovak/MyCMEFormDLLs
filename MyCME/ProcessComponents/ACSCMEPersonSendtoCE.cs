@@ -385,7 +385,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 var dp = new IDataParameter[2];
                 dp[0] = m_oda.GetDataParameter("@ID", SqlDbType.BigInt, attachId);
                 dp[1] = m_oda.GetDataParameter("@BLOBData", SqlDbType.Image, data.Length, data);
-                m_oda.ExecuteNonQueryParametrized("Aptify.dbo.spInsertAttachmentBlob", CommandType.StoredProcedure, dp);
+                m_oda.ExecuteNonQueryParametrized("Aptify.dbo.spInsertAttachmentBlob", CommandType.StoredProcedure, dp); 
 
                 SaveForm();
                 
