@@ -21,7 +21,7 @@ using Aptify.Framework.BusinessLogic.ProcessPipeline;
 
 namespace ACSMyCMEFormDLLs.ProcessComponents
 {
-       public class ACSCMEPersonSendtoCESave : IProcessComponent
+       public class ACSCMEPersonSendtoCESubmit : IProcessComponent
     {
         private AptifyApplication m_oApp = new AptifyApplication();
         
@@ -33,26 +33,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         private string url = "";
         private string service = "";
         AptifyGenericEntityBase AcsCmeSendToBrokerGE;
-        AptifyGenericEntityBase AttachmentsGE;
-        AptifyGenericEntityBase EventGE;
-        static string saveLocalPrefix = "C:\\Users\\Public\\Documents\\";
-        static string fileName = "XmlPersonCME" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".xml";
-        DateTime dateGranted;
-        string saveLocation = saveLocalPrefix + fileName;
-        string searchRecordSql;
-        string _eventStartDate;
-        string _eventEndDate;
-        string firstName;
-        string lastName;
-        string licenseNumber;
-        string licenseeProfession;
-        string state;
-        long personId;
-        int eventId;
-        decimal cmeType1;
-        int attachmentCatId;
-        int entityId;
-        long attachId;
+        
         long RecordId;
 
         string attachmentCatIdSql;
@@ -102,40 +83,21 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         /// 
 
           
-        public string Run() 
+        public string Run()  
         {
-            if (da.UserCredentials.Server.ToLower() == "aptify")
-            {
-
-            }
-            if (da.UserCredentials.Server.ToLower() == "stagingaptify61")
-            {
-
-            }
-            if (da.UserCredentials.Server.ToLower() == "testaptify610")
-            {
-                url = "https://test.webservices.cebroker.com/";
-                service = "CEBrokerWebService.asmx/UploadXMLString";
-            }
+           
             try
             {
-                m_sResult = "SUCCESS"; 
-               
 
-                //long RecordId = 0;
-
-                //AcsCmeSendToBrokerGE = (AptifyGenericEntityBase)m_oProps.GetProperty("AcsCmeSendToBrokerGE");  //this is our object being passed in when we save an acs cme event record.
-                //RecordId = Convert.ToInt64(AcsCmeSendToBrokerGE.GetValue("Id"));
-                RecordId = Convert.ToInt64(m_oProps.GetProperty("RecordId"));
+                m_oProps.GetProperty("XmlData");
+                //  MessageBox.Show(Convert.ToString(m_oProps.GetProperty("XmlData")));
                 SaveForm();
-               
-
 
             }
             catch (Exception ex)
             {
                 Aptify.Framework.ExceptionManagement.ExceptionManager.Publish(ex);
-                return "FAILED";
+                m_sResult = "FAILED";
             }
            
             return m_sResult;
@@ -147,60 +109,27 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         {
             try
             {
-                //xmlText = File.ReadAllText(saveLocation);
+                
                 xmlText = Convert.ToString(m_oProps.GetProperty("XmlData"));
-                //AcsCmeSendToBrokerGE = (AptifyGenericEntityBase)m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
-                //xdoc = new XDocument();
-
+                RecordId = Convert.ToInt32(m_oProps.GetProperty("RecordId"));
+                url = Convert.ToString(m_oProps.GetProperty("url"));
+                service = Convert.ToString(m_oProps.GetProperty("service"));
                 InXML = Convert.ToString(xmlText);
 
                 using (var wb = new WebClient())
                 {
                     var data = new NameValueCollection();
                     data["InXML"] = InXML;
-
-                    //wb.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
-
                     var response = wb.UploadValues(url + service, "POST", data);
                     string responseInString = System.Text.Encoding.UTF8.GetString(response);
-
                     string responseInString1 = responseInString.Replace("&lt;", "\n<");
                     string responseInString2 = responseInString1.Replace("&gt;", ">");
-
-
                     xdoc = XDocument.Parse(responseInString2);
-
-
-                    //string toFind1 = "ErrorCode=\"";
-                    //string toFind2 = "\" Message";
-
-                    //string str;
-                    //string[] strArr;
-                    //int i;
-
-                    //str = responseInString2;
-                    //char[] splitchar = { '\n' };
-                    //strArr = str.Split(splitchar);
-                    //for (i = 0; i <= strArr.Length - 1; i++)
-                    //{
-                    //    if (strArr[i].Contains("ErrorCode=\""))
-                    //    {
-                    //        int start = strArr[i].IndexOf(toFind1) + toFind1.Length;
-                    //        int end = strArr[i].IndexOf(toFind2, start); //Start after the index of 'my' since 'is' appears twice
-                    //        string ErrorCode = strArr[i].Substring(start, end - start);
-
-                    //        if (ErrorCode != "")
-                    //        {
-
-                    //        }
-                    //    }
-                    //}
-                   
 
                 }
                 saveGE();
 
-                m_sResult = "SUCCESS";
+             //   m_sResult = "SUCCESS";
                // saveGE();
 
                 // RemoveLocalFile();
@@ -213,21 +142,21 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         private void saveGE()
         {
            AcsCmeSendToBrokerGE = m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
-           AcsCmeSendToBrokerGE.SetValue("XmlData", Convert.ToString(xmlText));
+           //AcsCmeSendToBrokerGE.SetValue("XmlData", Convert.ToString(xmlText));
            AcsCmeSendToBrokerGE.SetValue("XmlResponse", xdoc);
             //AcsCmeSendToBrokerGE.Save();
-            //if (!AcsCmeSendToBrokerGE.Save(false))
-            //{
-            //    m_sResult = "FAILED";
-            //    throw new Exception("Problem Saving attachments Record:" + AcsCmeSendToBrokerGE.RecordID);
+            if (!AcsCmeSendToBrokerGE.Save(false))
+            {
+                m_sResult = "FAILED";
+                throw new Exception("Problem Saving attachments Record:" + AcsCmeSendToBrokerGE.RecordID);
 
-            //}
-            //else
-            //{
-            //    AcsCmeSendToBrokerGE.Save(true);
+            }
+            else
+            {
+                AcsCmeSendToBrokerGE.Save(true);
 
-            //    m_sResult = "SUCCESS";
-            //}
+                m_sResult = "SUCCESS";
+            }
         }
     }
 }

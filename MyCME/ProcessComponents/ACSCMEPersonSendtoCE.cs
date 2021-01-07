@@ -72,6 +72,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         public string InXML = "";
         private string url = "";
         private string service = "";
+        string servicesurl;
         AptifyGenericEntityBase AcsCmeSendToBrokerGE;
         AptifyGenericEntityBase AcsCmePersonSendToBrokerGE;
         AptifyGenericEntityBase AttachmentsGE;
@@ -345,6 +346,9 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
 
                 fileName = Path.GetFileName(saveLocation);
                 data = File.ReadAllBytes(saveLocation);
+                xmlText = System.Text.Encoding.UTF8.GetString(data); 
+                InXML = xmlText;
+                m_oProps.SetProperty("XmlData",InXML);
 
                 AttachmentsGE = m_oApp.GetEntityObject("Attachments", -1);
                 AttachmentsGE.SetValue("Name", fileName);
@@ -385,10 +389,10 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 var dp = new IDataParameter[2];
                 dp[0] = m_oda.GetDataParameter("@ID", SqlDbType.BigInt, attachId);
                 dp[1] = m_oda.GetDataParameter("@BLOBData", SqlDbType.Image, data.Length, data);
-                m_oda.ExecuteNonQueryParametrized("Aptify.dbo.spInsertAttachmentBlob", CommandType.StoredProcedure, dp); 
+                m_oda.ExecuteNonQueryParametrized("Aptify.dbo.spInsertAttachmentBlob", CommandType.StoredProcedure, dp);
 
-                SaveForm();
-                
+                saveGE();
+
             }
             catch (Exception ex)
             {
@@ -400,17 +404,22 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         {
             try
             {
-                xmlText = File.ReadAllText(saveLocation);
-                InXML = Convert.ToString(xmlText);
-
+                //string newfilename;
+                //newfilename = servicesurl + "/Acs/api/Attachment/GetAttachment?attachmentId=" + attachId;
+                //xmlText = File.ReadAllText(saveLocation);
+                InXML = xmlText;
                 using (var wb = new WebClient())
                 {
-                    var data = new NameValueCollection();
-                    data["InXML"] = InXML;
+
+                   // xmlText = wb.DownloadString(newfilename);
+                    
+                    //InXML = Convert.ToString(xmlText);
+                    var xmlData = new NameValueCollection();
+                    xmlData["InXML"] = InXML;
 
                     //wb.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
 
-                    var response = wb.UploadValues(url + service, "POST", data);
+                    var response = wb.UploadValues(url + service, "POST", xmlData);
                     string responseInString = System.Text.Encoding.UTF8.GetString(response);
 
                     string responseInString1 = responseInString.Replace("&lt;", "\n<");
@@ -421,7 +430,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                   
                 }
                 saveGE();
-                m_sResult = "SUCCESS";
+               // m_sResult = "SUCCESS";
                
                 // RemoveLocalFile();
             }
@@ -453,10 +462,23 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         {
            AcsCmeSendToBrokerGE = m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
            AcsCmeSendToBrokerGE.SetValue("XmlData", Convert.ToString(xmlText));
-           AcsCmeSendToBrokerGE.SetValue("XmlResponse", xdoc);
+          // AcsCmeSendToBrokerGE.SetValue("XmlResponse", xdoc);
            AcsCmeSendToBrokerGE.SetValue("DateSent", Time);
            AcsCmeSendToBrokerGE.Save();
-           
+            if (!AcsCmeSendToBrokerGE.Save(false))
+            {
+                m_sResult = "FAILED";
+                throw new Exception("Problem Saving AcsCmeSendToBrokerGE Record:" + AcsCmeSendToBrokerGE.RecordID);
+
+            }
+            else
+            {
+                AcsCmeSendToBrokerGE.Save(true);
+                m_sResult = "SUCCESS";
+
+            }
+
+
         }
     }
 }
