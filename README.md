@@ -25,7 +25,7 @@ Getting your code up and running on your own system:
 # Build and Test
 1.	Check the build events (if you are using KillAptify leave the build events as is, if not remove the Pre and Post Build Events)
 2.	Make your changes and build the project.
-3.	Copy the dll into your desired instance of Aptify
+3.	Copy the dll into your desired instance of Aptify (if using KillAptify this will be done autmatically, ignore this step)
 4.  Update the ORO (Object Repository Object) for your dlls
 5.  If the project will be utilized from a web page you must ensure the dlls are also in the following libs on the server.
     Projects bin (project using the dll)
