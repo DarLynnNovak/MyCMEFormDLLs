@@ -10,8 +10,6 @@ In VS Choose the Build menu and then Configuration Manager and create a configur
 
 <Img src="https://dev.azure.com/facs-teamservices/55a19ed1-37ae-4841-8f97-d0eaf2dee4fd/_apis/git/repositories/bc88505b-35fe-4a1b-88d7-3435b08b29dc/items?path=%2FKillAptify%2FConfigManager.jpg&versionDescriptor%5BversionOptions%5D=0&versionDescriptor%5BversionType%5D=0&versionDescriptor%5Bversion%5D=master&resolveLfs=true&%24format=octetStream&api-version=5.0">
 
-## https://dev.azure.com/facs-teamservices/Aptify/_git/ACSMyCMEFormDLLs?path=%2FKillAptify%2FConfigManager.jpg
-
 Then you need to go to your project properties and the 'build events' tab and add this to the pre-build:
 
 call "C:\Program Files\KillAptify\KillAptify.bat" (change to the directory you put the kill aptify files in)
