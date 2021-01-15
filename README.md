@@ -1,6 +1,13 @@
 # Introduction 
 This project contains various dlls for use with the MyCME in Aptify.  The file set contains 5 dlls and is written in c sharp.
 
+MainFormLC
+ACSCMECESendEvents
+ACSCMEEventSetDeliveryMethod
+ACSCMECEPersonBuildXML
+ACSCMECEPersonSubmitXML
+
+
 # Getting Started
 Getting your code up and running on your own system:
 1.	Clone this project to a folder on your drive.
