@@ -7,11 +7,14 @@ ACSCMECESendEvents: (Initiates and builds the xml for the events choosen in the 
 
 ACSCMEEventSetDeliveryMethod: (Sets the delivery method for the event to coincide with the delivery methods provided by the CE Broker, this is done on the save of the event record)
 
-ACSCMECEPersonBuildXML: (Builds the XML for submitting person cme to CE broker based on dates choosen from the web page:)
+ACSCMECEPersonBuildXML: (Via process flow, builds the XML for submitting person cme to CE broker based on dates choosen from the web page.  These process flows can be run inside of Aptify and independently from the web)
 
+Development Web Site
 http://dev.facs.org/cme
+Process Flow ID:  566
 
 http://qa.facs.org/cme
+Process Flow ID:  559
 
 ACSCMECEPersonSubmitXML:  (Submits XML to CE Broker from above steps)
 
