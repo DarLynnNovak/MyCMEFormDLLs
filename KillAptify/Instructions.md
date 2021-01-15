@@ -31,5 +31,4 @@ if "$(ConfigurationName)" == "Aptify Prod 6" (call "C:\Program Files\KillAptify\
 *Note you will want to ensure each of the files above have the correct path to that aptify instance.
 
 While still in the project properties, you will want to go to the build tab and change the output path for each of the Aptify instance to match your Aptify Instance directory path.
-
-## https://dev.azure.com/facs-teamservices/Aptify/_git/ACSMyCMEFormDLLs?path=%2FKillAptify%2Fbuild.JPG
+<img src="https://dev.azure.com/facs-teamservices/55a19ed1-37ae-4841-8f97-d0eaf2dee4fd/_apis/git/repositories/bc88505b-35fe-4a1b-88d7-3435b08b29dc/items?path=%2FKillAptify%2Fbuild.JPG&versionDescriptor%5BversionOptions%5D=0&versionDescriptor%5BversionType%5D=0&versionDescriptor%5Bversion%5D=master&resolveLfs=true&%24format=octetStream&api-version=5.0">
