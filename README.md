@@ -24,6 +24,7 @@ Process Flow ID:  559
 # Getting Started
 Getting your code up and running on your own system:
 1.	Clone this project to a folder on your drive.
+2.  Open the solution in Visual Studio or your choice of ide.
 
 
 # Build and Test
