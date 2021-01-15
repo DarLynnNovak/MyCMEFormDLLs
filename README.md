@@ -5,7 +5,7 @@ MainFormLC: (controls elements on the main form, ie tabs, form fields)
 
 ACSCMECESendEvents: (Initiates and builds the xml for the events choosen in the grid after clicking the Send to CE Broker button)
 
-ACSCMEEventSetDeliveryMethod: (Sets the delivery method for the event to coincide with the delivery methods provided by the CE Broker)
+ACSCMEEventSetDeliveryMethod: (Sets the delivery method for the event to coincide with the delivery methods provided by the CE Broker, this is done on the save)
 
 ACSCMECEPersonBuildXML: (Builds the XML for submitting person cme to CE broker based on dates choosen from the web page:)
 
