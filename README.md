@@ -1,20 +1,38 @@
 # Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+This project contains various dlls for use with the MyCME in Aptify.  The file set contains 5 dlls and is written in c sharp.
+
+<b>MainFormLC:</b> (controls elements on the main form, ie tabs, form fields)
+
+<b>ACSCMECESendEvents:</b> (Initiates and builds the xml for the events choosen in the grid after clicking the Send to CE Broker button)
+
+<b>ACSCMEEventSetDeliveryMethod:</b> (Sets the delivery method for the event to coincide with the delivery methods provided by the CE Broker, this is done on the save of the event record)
+
+<b>ACSCMECEPersonBuildXML:</b> (Via process flow, builds the XML for submitting person cme to CE broker based on dates choosen from the web page.  These process flows can be run inside of Aptify and independently from the web)
+
+Development Web Site
+http://dev.facs.org/cme
+Process Flow ID:  566
+
+Staging (qa) Web Site
+http://qa.facs.org/cme
+Process Flow ID:  559
+
+<b>ACSCMECEPersonSubmitXML:</b>  (Submits XML to CE Broker from above steps)
+
+
 
 # Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+Getting your code up and running on your own system:
+1.	Clone this project to a folder on your drive.
+2.  Open the solution in Visual Studio or your choice of ide.
+
 
 # Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+1.	Check the build events (if you are using KillAptify leave the build events as is, if not remove the Pre and Post Build Events)
+2.	Make your changes and build the project.
+3.	Copy the dll into your desired instance of Aptify (if using KillAptify this will be done autmatically, ignore this step)
+4.  Update the ORO (Object Repository Object) for your dlls
+5.  If the project will be utilized from a web page you must ensure the dlls are also in the following libs on the server.
+    Projects bin (project using the dll)
+    Services bin (Aura Services bin)
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
-
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
