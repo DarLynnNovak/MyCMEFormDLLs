@@ -36,7 +36,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
     public class roster
     {
         public int id_provider;
-        public int id_course;
+        public int provider_course_code;
 
         public List<attendee> attendees { get; set; }
     }
@@ -46,9 +46,9 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
     {
         public string license_professional;
         public string license;
-        public string cebroker_state; //event name
-        public string first_name; //event cme_program
-        public string last_name; //if eventType != Live then Anytime
+        public string cebroker_state; 
+        public string first_name; 
+        public string last_name; 
         public string date_completed;
         public List<partial_credit> partial_credits{ get; set; }
     }
@@ -56,12 +56,12 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
     [Serializable]
     public class partial_credit
     {
-        public string cd_profession; //locate BoardId from ACSCMEDataBrokerBoard
+        public string cd_profession; 
         public string cd_subject_area;
         public decimal partial_credit_hours;
     }
 
-    public class ACSCMEPersonSendtoCE : IProcessComponent
+    public class ACSCMECEPersonBuildXML : IProcessComponent
     {
         private AptifyApplication m_oApp = new AptifyApplication();
         
@@ -71,15 +71,13 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         private string m_sResult = "SUCCESS";
         public string InXML = "";
         private string url = "";
-        private string service = "";
-        string servicesurl;
+        private string service = ""; 
         AptifyGenericEntityBase AcsCmeSendToBrokerGE;
-        AptifyGenericEntityBase AcsCmePersonSendToBrokerGE;
         AptifyGenericEntityBase AttachmentsGE;
         AptifyGenericEntityBase EventGE;
         static string saveLocalPrefix = @"C:\Users\Public\Documents\";
         static string fileName = "XmlPersonCME" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".xml";
-        DateTime dateGranted;
+        DateTime dateGranted; 
         string saveLocation = saveLocalPrefix + fileName;
         string searchRecordSql;
         string searchBoardRecordSql;
@@ -154,25 +152,13 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
           
         public string Run() 
         {
-            if (da.UserCredentials.Server.ToLower() == "aptify")
-            {
 
-            }
-            if (da.UserCredentials.Server.ToLower() == "stagingaptify61")
-            {
-
-            }
-            if (da.UserCredentials.Server.ToLower() == "testaptify610")
-            {
-                url = "https://test.webservices.cebroker.com/";
-                service = "CEBrokerWebService.asmx/UploadXMLString";
-            }
             try 
             {
                 m_sResult = "SUCCESS";
 
                 RecordId = Convert.ToInt64(m_oProps.GetProperty("RecordId"));
-                //long RecordId = 0;
+
                 if (Convert.ToString(RecordId) != "")
                 {
                     AcsCmeSendToBrokerGE = m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
@@ -228,7 +214,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 TextWriter writer = new StreamWriter(saveLocation);
 
                 //Create Roster XML
-
+                 
                 Rosters rosters = new Rosters();
                 rosters.id_parent_provider = Convert.ToInt32(dt.Rows[0]["ProviderId"]);
                 rosters.upload_key = Convert.ToString(dt.Rows[0]["UploadKey"]); //need to get the upload_key number from the CE Broker
@@ -251,7 +237,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 ExceptionManager.Publish(ex);
             }
         }
-        private void CreateXml(Rosters rosters) //Need EventId pulled in to get the event information for processing
+        private void CreateXml(Rosters rosters) 
         {
 
             try
@@ -259,40 +245,26 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 roster roster = new roster();
                 roster.attendees = new List<attendee>();
                 attendee attendee = new attendee();
-                partial_credit partial_credit = new partial_credit();
+                partial_credit partial_credit = new partial_credit(); 
                 attendee.partial_credits = new List<partial_credit>();
-                
 
+                var exists = "n";
 
                 EventGE = (AptifyGenericEntityBase)m_oApp.GetEntityObject("ACSCMEEvent", eventId);
                 var cmeMaxCredits = Convert.ToDecimal(EventGE.GetValue("cme_max_credits"));
+               
                 rosters.roster.Add(new roster
                 {
                     id_provider = rosters.id_parent_provider,
-                    id_course = eventId,
+                    provider_course_code = eventId,
                     attendees  = roster.attendees
 
                 });
-                //Create new element course
-                roster.attendees.Add(new attendee
-                {
-                    license_professional = licenseeProfession,
-                    license = licenseNumber,
-                    cebroker_state = state,
-                    first_name = firstName,
-                    last_name = lastName,
-                    date_completed = Convert.ToDateTime(dateGranted).ToString("MM/dd/yyyy")
-
-
-                });
                 if (cmeType1 < cmeMaxCredits)
-                {
-                    roster.attendees.Add(new attendee
-                    {
-                        partial_credits = attendee.partial_credits
-                    });
-
+                {                 
+                    exists = "y";
                 }
+
                 searchBoardRecordSql = "select distinct ACSCMEDataBrokerBoard_BoardId from vwACSCMEDataBrokerBoardSubject where ProfessionCode = '" + licenseeProfession + "' and ACSCMEDataBrokerBoard_AuthorizedState = '" +  state + "'";
                 boardId = Convert.ToInt32(m_oda.ExecuteScalar(searchBoardRecordSql));
                 searchBoardSubjectRecordSql = "select * from vwACSCMEDataBrokerBoardSubject where ACSCMEDataBrokerBoard_BoardId = " + boardId + " and ACSCMESubType_ID = " + Convert.ToInt32(EventGE.GetValue("CmeTypeID"));
@@ -320,13 +292,44 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     }
                 }
 
-                    attendee.partial_credits.Add(new partial_credit
+                if (exists == "y")
                 {
-                    
-                    cd_profession = cdProfession,
-                      cd_subject_area = cdSubjectArea,
-                      partial_credit_hours = cmeType1
-                   });
+                    roster.attendees.Add(new attendee
+                    {
+                        license_professional = licenseeProfession,
+                        license = licenseNumber,
+                        cebroker_state = state,
+                        first_name = firstName,
+                        last_name = lastName,
+                        date_completed = Convert.ToDateTime(dateGranted).ToString("MM/dd/yyyy"),
+                        partial_credits = attendee.partial_credits
+                    });
+                    //roster.attendees.Add(new attendee
+                    //{
+                    //    partial_credits = attendee.partial_credits
+
+                    //});
+                    attendee.partial_credits.Add(new partial_credit
+                    {
+                        cd_profession = cdProfession,
+                        cd_subject_area = cdSubjectArea,
+                        partial_credit_hours = cmeType1
+                    });
+                }
+                else
+                {
+                    //Create new element course
+                    roster.attendees.Add(new attendee
+                    {
+                        license_professional = licenseeProfession,
+                        license = licenseNumber,
+                        cebroker_state = state,
+                        first_name = firstName,
+                        last_name = lastName,
+                        date_completed = Convert.ToDateTime(dateGranted).ToString("MM/dd/yyyy")
+
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -342,7 +345,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 entityId = Convert.ToInt32(m_oda.ExecuteScalar(entityIdSql));
                 attachmentCatIdSql = "select ID from vwAttachmentCategories where name like 'MyCMEXML'";
                 attachmentCatId = Convert.ToInt32(m_oda.ExecuteScalar(attachmentCatIdSql));
-                //need to get the file that gets created and read it back into
 
                 fileName = Path.GetFileName(saveLocation);
                 data = File.ReadAllBytes(saveLocation);

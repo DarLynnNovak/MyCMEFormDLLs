@@ -5,18 +5,16 @@ using Aptify.Framework.ExceptionManagement;
 using Aptify.Framework.WindowsControls;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Data;
 using System.Drawing;
 using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Windows.Forms;
+using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using System.Net.Http;
-using System.Net;
-using System.Collections.Specialized;
-using System.Xml;
-using System.Text;
-using System.Web;
 
 namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 {
@@ -67,7 +65,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         public string cd_profession; //MD or DO depending on what doctor is
     }
 
-    public class SendCEEventFinal : FormTemplateLayout 
+    public class ACSCMECESendEvents : FormTemplateLayout 
     {
         private AptifyProperties m_oProps = new AptifyProperties();
         private AptifyApplication m_oApp = new AptifyApplication();
@@ -77,41 +75,45 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         private AptifyActiveButton _sendToBrokerBtn;
         private AptifyTextBox _eventStartDate;
         private AptifyTextBox _eventEndDate;
+        private AptifyTextBox _status;
+        private System.Windows.Forms.Form _parentForm;
         private DataAction m_oda = new DataAction();
         private DataGridView grdRecordSearch;
         private DataTable _recordSearchDT;
         private bool _boolAdded;
+        DateTime CurrentDate = DateTime.Now;
+        public CheckBox HeaderCheckBox { get; private set; }
+        private AptifyGenericEntityBase EventGE;
+        private string url = "";
+        private string service = "";
         private static readonly HttpClient client = new HttpClient();
         public string InXML = "";
         byte[] data;
         CheckBox headerCheckBox = new CheckBox();
         DataGridViewCheckBoxCell recordCheckBox = new DataGridViewCheckBoxCell();
         XDocument xDoc = new XDocument();
-        static string saveLocalPrefix = "C:\\Users\\Public\\Documents\\";
+        static string saveLocalPrefix = @"C:\Users\Public\Documents\";
         static string fileName = "XmlEventCourses" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".xml";
-        //static string fileName = "XmlEventCourses20201105_1156.xml"; //changed for testing change back to abve
         string attachmentCatIdSql;
         string entityIdSql;
-        int eventId;
-        string result = "Failed";
+        string result = "FAILED";
         string saveLocation = saveLocalPrefix + fileName;
         string searchRecordSql;
         string senderIdSql;
-
+        string errorMessages;
+        string hasErrors;
+        string ErrorCode;
+        string status;
+        string ErrorMes;
         int attachmentCatId;
+        int eventId;
         int entityId;
-        int num;
         int senderId;
         long attachId;
         long recordId;
         long userId;
+        long MRId;
 
-        public CheckBox HeaderCheckBox { get; private set; }
-        private AptifyGenericEntityBase EventGE;
-        private AptifyGenericEntityBase BoardGE;
-        private AptifyGenericEntityBase ComponentGE;
-        private string url = "";
-        private string service = "";
         public void Config()
         {
             try
@@ -120,14 +122,14 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 this.m_oda = new Aptify.Framework.DataServices.DataAction(this.m_oApp.UserCredentials);
                 userId = m_oda.UserCredentials.AptifyUserID;
 
-                //If m_oda.UserCredentials.Server.ToLower = "aptify" Then
                 if (m_oda.UserCredentials.Server.ToLower() == "aptify")
                 {
 
                 }
                 if (m_oda.UserCredentials.Server.ToLower() == "stagingaptify61")
                 {
-
+                    url = "https://test.webservices.cebroker.com/";
+                    service = "CEBrokerWebService.asmx/UploadXMLString";
                 }
                 if (m_oda.UserCredentials.Server.ToLower() == "testaptify610")
                 {
@@ -156,7 +158,16 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     {
                         grdRecordSearch = CreateGrid();
                     }
+                    if (status != "")
+                    {
+                        _sendToBrokerBtn.Enabled = false;
+                    }
+                    else
+                    {
+                        _sendToBrokerBtn.Enabled = true;
+                    }
                 }
+                _parentForm = this.ParentForm;
                 RecordSearch();
              
             }
@@ -168,7 +179,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         }//End OnFormTemplateLoaded\
 
 
-        protected virtual void BindControls()
+        protected virtual void BindControls() 
         {
             try
             {
@@ -176,10 +187,10 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 {
                     _sendToBrokerBtn = GetFormComponentByLayoutKey(this, "ACSCMEEventsSendToBroker Records To Send.Active Button.1") as AptifyActiveButton;
                 }
-                if (_senderIdLinkBox == null || _senderIdLinkBox.IsDisposed)
-                {
-                    _senderIdLinkBox = GetFormComponentByLayoutKey(this, "ACS.ACSCMEEventsSendToBroker.Form.SenderId") as AptifyLinkBox;
-                }
+                //if (_senderIdLinkBox == null || _senderIdLinkBox.IsDisposed)
+                //{
+                //    _senderIdLinkBox = GetFormComponentByLayoutKey(this, "ACS.ACSCMEEventsSendToBroker.Form.SenderId") as AptifyLinkBox;
+                //}
                 if (_eventStartDate == null || _eventStartDate.IsDisposed)
                 {
                     _eventStartDate = GetFormComponentByLayoutKey(this, "ACSCMEEventsSendToBroker Records To Send.EventStartDate") as AptifyTextBox;
@@ -188,6 +199,12 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 {
                     _eventEndDate = GetFormComponentByLayoutKey(this, "ACSCMEEventsSendToBroker Records To Send.EventEndDate") as AptifyTextBox;
                 }
+                if (_status == null || _status.IsDisposed)
+                {
+                    _status = GetFormComponentByLayoutKey(this, "ACSCMEEventsSendToBroker Records To Send.Status") as AptifyTextBox;
+                }
+                status = _status.Value.ToString();
+
 
                 if (_sendToBrokerBtn != null)
                 {
@@ -232,11 +249,10 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 
             try
             {
-                entityIdSql = "select ID from Entities where name like 'ACSCMESendToBroker'";
+                entityIdSql = "select ID from Entities where name like 'ACSCMEEventsSendToBroker'";
                 entityId = Convert.ToInt32(m_oda.ExecuteScalar(entityIdSql));
                 attachmentCatIdSql = "select ID from vwAttachmentCategories where name like 'MyCMEXML'";
                 attachmentCatId = Convert.ToInt32(m_oda.ExecuteScalar(attachmentCatIdSql));
-                //need to get the file that gets created and read it back into
 
                 fileName = Path.GetFileName(saveLocation);
                 data = File.ReadAllBytes(saveLocation);
@@ -252,17 +268,17 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 
                 if (!AttachmentsGE.Save(false))
                 {
-                    result = "Error";
+                    result = "FAILED";
                     throw new Exception("Problem Saving attachments Record:" + AttachmentsGE.RecordID);
 
                 }
                 else
                 {
                     AttachmentsGE.Save(true);
-                    result = "Success";
+                    result = "SUCCESS";
                     attachId = AttachmentsGE.RecordID;
                 }
-                if (result == "Success")
+                if (result == "SUCCESS")
                 {
                     SaveAttachmentBlob();
                 }
@@ -281,7 +297,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 dp[0] = m_oda.GetDataParameter("@ID", SqlDbType.BigInt, attachId);
                 dp[1] = m_oda.GetDataParameter("@BLOBData", SqlDbType.Image, data.Length, data);
                 m_oda.ExecuteNonQueryParametrized("Aptify.dbo.spInsertAttachmentBlob", CommandType.StoredProcedure, dp);
-               
+                //CreateRecordSent();
                 SaveForm();
 
             }
@@ -304,9 +320,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 {
                     var data = new NameValueCollection();
                     data["InXML"] = InXML;
-
-                    //wb.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
-                    
+                  
                     var response = wb.UploadValues(url + service, "POST", data);
                     string responseInString = System.Text.Encoding.UTF8.GetString(response);
 
@@ -319,35 +333,73 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     
                     string toFind1 = "ErrorCode=\"";
                     string toFind2 = "\" Message";
-                    
+                    string toFind3 = "Message=\"";
+                    string toFind4 = "\"";
+                    string toFind5 = "provider_course_code=\"";
+                    string toFind6 = "\"";
                     string str; 
                     string[] strArr;
                     int i;
 
-                    str = responseInString2;
+                    str = responseInString2; 
                     char[] splitchar = { '\n' };
                     strArr = str.Split(splitchar);
+                    errorMessages = "<table><tr><td>CE Broker Event Submission Errors For Record: " + recordId + "</td></tr></table>";
                     for (i = 0; i <= strArr.Length - 1; i++)
                     {
                         if (strArr[i].Contains("ErrorCode=\""))
                         {
                             int start = strArr[i].IndexOf(toFind1) + toFind1.Length;
-                            int end = strArr[i].IndexOf(toFind2, start); //Start after the index of 'my' since 'is' appears twice
-                            string ErrorCode = strArr[i].Substring(start, end - start);
+                            int end = strArr[i].IndexOf(toFind2, start);
+                            ErrorCode = strArr[i].Substring(start, end - start);
+                            
 
+                            //MessageBox.Show(eventid); 
                             if (ErrorCode != "")
                             {
-                                //MessageBox.Show(ErrorCode);
+                                int eventStart = strArr[i].IndexOf(toFind5) + toFind5.Length;
+                                int eventEnd = strArr[i].IndexOf(toFind6, eventStart);
+                                eventId = Convert.ToInt32(strArr[i].Substring(eventStart, eventEnd - eventStart));
+                                int startmes = strArr[i].IndexOf(toFind3) + toFind3.Length;
+                                int endmes = strArr[i].IndexOf(toFind4, startmes);
+                                ErrorMes = strArr[i].Substring(startmes, endmes - startmes);
+                                UpdateErrorMessage();
+                                errorMessages = errorMessages + "<table><tr><td>Event:  " + eventId + "</td><td> Error Code:  " + ErrorCode + "</td><td> Error Message:  " + ErrorMes + "</td></tr></table>";
+                                hasErrors = "TRUE";
                             }
+                            //else
+                            //{
+                            //    CreateRecordSent();
+                            //    hasErrors = "FALSE";
+                            //}
                         }
                     }
+                    
                     this.FormTemplateContext.GE.SetValue("XmlResponse", xdoc);
 
                 }
+                if (hasErrors == "TRUE")
+                {
+                    createMessageRun();
+                    this.FormTemplateContext.GE.SetValue("Status", "HAS ERRORS");
+                }
+                else
+                {
+                    this.FormTemplateContext.GE.SetValue("Status", "SUBMITTED");
+                }
 
-                this.FormTemplateContext.GE.SetValue("XmlData", Convert.ToString(xmlText));              
+                this.FormTemplateContext.GE.SetValue("XmlData", Convert.ToString(xmlText));
+                //if (senderId > 0)
+                //{
+                //    this.FormTemplateContext.GE.SetValue("SenderId", senderId);
+                //}
+                //else
+                //{
+                //    this.FormTemplateContext.GE.SetValue("SenderId", 03096875);
+                //}
+                
                 this.FormTemplateContext.GE.Save();
-                // RemoveLocalFile();
+                RemoveLocalFile();
             }
             catch (Exception ex)
             {
@@ -355,6 +407,162 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
             }
         }
 
+        private void CreateRecordSent()
+        {
+
+            try
+            {
+                var sql = "select * from acscmecebrokerdata where ACSCMEEventId = " + eventId + " and resubmitevent = 1";
+                var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
+                //need to get the file that gets created and read it back into
+
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        BrokerDataGE = m_oApp.GetEntityObject("ACSCMECEBrokerData", Convert.ToInt64(dt.Rows[0]["ID"].ToString()));
+                        BrokerDataGE.SetValue("ResubmitEvent", 0);
+                        BrokerDataGE.SetValue("ErrorCode", ErrorCode);
+                        //BrokerDataGE.SetValue("ReturnErrorDesc",errorMes);
+
+                    } 
+                }
+                else
+                {
+                    BrokerDataGE = m_oApp.GetEntityObject("ACSCMECEBrokerData", -1);
+                    BrokerDataGE.SetValue("ACSCMEEventId", eventId);
+                    BrokerDataGE.SetValue("ACSCMESendToBrokerId", recordId);
+                    BrokerDataGE.SetValue("ErrorCode", ErrorCode);
+                   //BrokerDataGE.SetValue("ReturnErrorDesc", errorMes);
+                }
+
+
+                if (!BrokerDataGE.Save(false))
+                {
+                    result = "FAILED";
+                    throw new Exception("Problem Saving broker data Record:" + BrokerDataGE.RecordID);
+
+                }
+                else
+                {
+                    BrokerDataGE.Save(true);
+                    result = "SUCCESS";
+
+                }
+
+            }
+
+            catch (Exception ex)
+            {
+                ExceptionManager.Publish(ex);
+            }
+        }
+
+        private void UpdateErrorMessage()
+        {
+
+            try
+            {
+                var sql = "select * from acscmecebrokerdata where ACSCMEEventId = " + eventId;
+                var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
+                var errorIdSql = "select ID from acscmecebrokererrors where errorcode = " + ErrorCode;
+                int errorId = Convert.ToInt32(m_oda.ExecuteScalar(errorIdSql));
+
+                //need to get the file that gets created and read it back into
+
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        BrokerDataGE = m_oApp.GetEntityObject("ACSCMECEBrokerData", Convert.ToInt64(dt.Rows[0]["ID"].ToString()));
+                        BrokerDataGE.SetValue("ACSCMESendToBrokerId", recordId);
+                        BrokerDataGE.SetValue("ResubmitEvent", 0);
+                        BrokerDataGE.SetValue("ErrorCodeId", errorId);
+                        BrokerDataGE.SetValue("ReturnErrorDesc", ErrorMes);
+                    }
+                }
+                else
+                {
+                    BrokerDataGE = m_oApp.GetEntityObject("ACSCMECEBrokerData",-1);
+                    BrokerDataGE.SetValue("ACSCMESendToBrokerId", recordId);
+                    BrokerDataGE.SetValue("ResubmitEvent", 0);
+                    BrokerDataGE.SetValue("ACSCMEEventId", eventId);
+                    BrokerDataGE.SetValue("ErrorCodeId", errorId);
+                    BrokerDataGE.SetValue("ReturnErrorDesc", ErrorMes);
+
+                }
+                
+
+                if (!BrokerDataGE.Save(false))
+                {
+                    result = "FAILED";
+                    throw new Exception("Problem Saving broker data Record:" + BrokerDataGE.RecordID);
+
+                }
+                else
+                {
+                    BrokerDataGE.Save(true);
+                    result = "SUCCESS";
+
+                }
+
+            }
+
+            catch (Exception ex)
+            {
+                ExceptionManager.Publish(ex);
+            }
+        }
+        private void createMessageRun()
+        {
+
+            try
+            {
+                AptifyGenericEntityBase messageRunGe;
+                messageRunGe = m_oApp.GetEntityObject("Message Runs", -1);
+                {
+
+                    messageRunGe.SetValue("MessageSystemID", 6);
+                    messageRunGe.SetValue("MessageSourceID", 2);
+                    messageRunGe.SetValue("MessageTemplateID", m_oProps.GetProperty("MessageTemplateId"));
+                    messageRunGe.SetValue("ApprovalStatus", "Approved");
+                    messageRunGe.SetValue("Status", "Pending");
+                    messageRunGe.SetValue("ScheduledStartDate", CurrentDate);
+                    messageRunGe.SetValue("Priority", "Normal");
+                    messageRunGe.SetValue("ToType", "Static");
+                    messageRunGe.SetValue("ToValue", "dnovak@facs.org");
+                    messageRunGe.SetValue("CCType", "Static");
+                    // .SetValue("Comments", PersonID)
+                    messageRunGe.SetValue("RecipientCount", 0);
+                    messageRunGe.SetValue("SourceType", "StaticSingle");
+                    messageRunGe.SetValue("IDString", "3096875");
+                    messageRunGe.SetValue("HTMLBody", errorMessages);
+                    messageRunGe.SetValue("Subject", "CE Broker Event Submission Errors for Record #: " + recordId);
+                }
+
+
+
+                if (messageRunGe.IsDirty)
+                {
+                    if (!messageRunGe.Save(false))
+                    {
+                        result = "FAILED";
+                        throw new Exception("Problem Saving Course Record:" + messageRunGe.RecordID);
+                       
+                    }
+                    else
+                    {
+                        messageRunGe.Save(true);
+                        result = "SUCCESS";
+                        MRId = messageRunGe.RecordID;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Aptify.Framework.ExceptionManagement.ExceptionManager.Publish(ex);
+            }
+        }
 
         public DataGridView CreateGrid()
         {
@@ -365,7 +573,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 // Dim gridtop = lCompanyLinkbox.Top + lCompanyLinkbox.Height + 10 
                 grdReturn = new DataGridView();
                 grdReturn.Name = "grdRecordSearch";
-                grdReturn.Size = new System.Drawing.Size(800, 400);
+                grdReturn.Size = new System.Drawing.Size(900, 400);
                 grdReturn.Location = new System.Drawing.Point(0, 100);
                 Controls.Add(grdReturn);
                 grdReturn.Visible = true;
@@ -383,7 +591,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         {
             try
             {
-                searchRecordSql = "select ID, Name, CME_Start_Date, CME_End_Date,CME_Program, CME_Max_Credits FROM ACSCMEEvent WHERE convert(date, cme_start_date, 120) >= convert(date, '" + _eventStartDate.Value + "', 101) AND convert(date, cme_start_date,120) <= convert(date, '" + _eventEndDate.Value + "', 101) AND ID NOT In(SELECT ACSCMEEventId FROM ACSCMECEBrokerData WHERE ReSubmitEvent = 0)";
+                searchRecordSql = "select ID, Name, CME_Start_Date, CME_End_Date,CME_Program, CME_Max_Credits FROM ACSCMEEvent WHERE convert(date, cme_start_date, 120) >= convert(date, '" + _eventStartDate.Value + "', 101) AND convert(date, cme_start_date,120) <= convert(date, '" + _eventEndDate.Value + "', 101) AND ID NOT In(SELECT ACSCMEEventId FROM ACSCMECEBrokerData WHERE ReSubmitEvent = 0 and ACSCMEEventId is not null)";
                 _recordSearchDT = m_oda.GetDataTable(searchRecordSql);
                 if (_recordSearchDT.Rows.Count > 0)
                 {
@@ -444,18 +652,37 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 
         private void _sendToBrokerBtn_Click(object sender, EventArgs e)
         {
-            // CreateXml();
-            var answer = MessageBox.Show("Are you sure you wish to process records the selected records?", "Submit XML", MessageBoxButtons.YesNo);
-
-            switch (answer)
+            if (recordId > 0)
             {
-                case DialogResult.Yes:
-                   // SaveForm();
-                    findSelectedRecords();
+                // CreateXml();
+                var answer = MessageBox.Show("Are you sure you wish to process the selected records?", "Submit XML", MessageBoxButtons.YesNo);
+
+                switch (answer)
+                {
+                    case DialogResult.Yes:
+                        // SaveForm();
+                        findSelectedRecords();
 
 
-                    break;
+                        break;
+                }
             }
+            else
+            {
+                var answer = MessageBox.Show("Please save this record in order to proceed", "Submit XML", MessageBoxButtons.YesNo);
+                //var answer = MessageBox.Show("Please save this record in order to proceed", "Submit XML");
+
+
+                switch (answer)
+                {
+                    case DialogResult.Yes:
+                        // SaveForm();
+                        FormTemplateContext.GE.Save();
+                        _parentForm.Close();
+                        break;
+                }
+            }
+            
         }//End BtnClick
 
         private void findSelectedRecords()
@@ -482,10 +709,9 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     bool isSelected = Convert.ToBoolean(row.Cells["checkBoxColumn"].Value);
                     if (isSelected)
                     {
-                        //eventId += Convert.ToInt32(Environment.NewLine);
-                        //eventId += Convert.ToInt32(row.Cells["ID"].Value.ToString());
                         eventId = Convert.ToInt32(row.Cells["ID"].Value.ToString());
                         CreateXml(eventId, saveLocation, courses, courses.id_parent_provider);
+                        CreateRecordSent();
                     }
                 }
 
@@ -493,9 +719,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 serializer.Serialize(writer, courses);
                 writer.Close();
                 CreateAttachment();
-                CreateRecordSent();
-                 //MessageBox.Show("Selected Values" + data);
-
+                //CreateRecordSent();
             }
             catch (Exception ex)
             {
@@ -508,10 +732,6 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 
             try
             {
-
-                //course = new List<course>();
-                //board board = new board();
-                //component component = new component();
                 course course = new course();
                 course.course_board = new List<board>();
                 string courseType = "";
@@ -560,8 +780,6 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     dt_end = Convert.ToDateTime(endDate).ToString("MM/dd/yyyy"), //changed this to convert
                     course_board = course.course_board
                 }); 
-
-                //BoardGE = m_oApp.GetEntityObject("ACSCMEDataBrokerBoard");
 
                 CreateBoard(course, subTypeId, cmeMaxCredits);
             }
@@ -639,52 +857,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 
         }
 
-        private void CreateRecordSent()
-        {
-
-            try
-            {
-                var sql = "select * from acscmecebrokerdata where ACSCMEEventId = " + eventId + " and resubmitevent = 1";
-                var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
-                //need to get the file that gets created and read it back into
-
-                if (dt.Rows.Count > 0)
-                {
-                    foreach (DataRow dr in dt.Rows)
-                    {
-                        BrokerDataGE = m_oApp.GetEntityObject("ACSCMECEBrokerData", Convert.ToInt64(dt.Rows[0]["ID"].ToString()));
-                        BrokerDataGE.SetValue("ResubmitEvent", 0);
-
-                    }
-                }
-                else
-                {
-                    BrokerDataGE = m_oApp.GetEntityObject("ACSCMECEBrokerData", -1);
-                    BrokerDataGE.SetValue("ACSCMEEventId", eventId);
-                    BrokerDataGE.SetValue("ACSCMESendToBrokerId", recordId);
-                }
-
-                
-                if (!BrokerDataGE.Save(false))
-                {
-                    result = "Error";
-                    throw new Exception("Problem Saving broker data Record:" + BrokerDataGE.RecordID);
-
-                }
-                else
-                {
-                    BrokerDataGE.Save(true);
-                    result = "Success";
-
-                }
-
-            }
-
-            catch (Exception ex)
-            {
-                ExceptionManager.Publish(ex);
-            }
-        }
+        
 
         private void RemoveLocalFile()
         {
@@ -702,6 +875,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
             }
             catch (Exception ex)
             {
+                ExceptionManager.Publish(ex);
             }
         }
 
