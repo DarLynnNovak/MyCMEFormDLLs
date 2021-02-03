@@ -44,7 +44,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
     [Serializable]
     public class attendee
     {
-        public string license_professional;
+        public string licensee_profession;
         public string license;
         public string cebroker_state; 
         public string first_name; 
@@ -296,7 +296,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 {
                     roster.attendees.Add(new attendee
                     {
-                        license_professional = licenseeProfession,
+                        licensee_profession = licenseeProfession,
                         license = licenseNumber,
                         cebroker_state = state,
                         first_name = firstName,
@@ -311,7 +311,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     //});
                     attendee.partial_credits.Add(new partial_credit
                     {
-                        cd_profession = cdProfession,
+                        cd_profession = licenseeProfession,
                         cd_subject_area = cdSubjectArea,
                         partial_credit_hours = cmeType1
                     });
@@ -321,7 +321,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     //Create new element course
                     roster.attendees.Add(new attendee
                     {
-                        license_professional = licenseeProfession,
+                        licensee_profession = licenseeProfession,
                         license = licenseNumber,
                         cebroker_state = state,
                         first_name = firstName,

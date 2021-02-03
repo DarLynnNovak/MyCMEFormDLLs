@@ -872,6 +872,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     System.IO.File.Delete(FileToDelete);
                    // MessageBox.Show("File Deleted");
                 }
+                MessageBox.Show("Process Completed.");
             }
             catch (Exception ex)
             {
