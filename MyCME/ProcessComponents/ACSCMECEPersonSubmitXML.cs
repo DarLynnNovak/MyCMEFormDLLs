@@ -29,6 +29,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         string ErrorCode;
         string ErrorMes;
         string result = "FAILED";
+        long ceBrokerLearnerId;
         long RecordId;
         long MRId;
         int eventId;
@@ -40,7 +41,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         Rosters rosters = new Rosters();
         XDocument xdoc = new XDocument();
         String xmlText;
-        public virtual DataAction DataAction  
+        public virtual DataAction DataAction
         {
             get
             {
@@ -48,7 +49,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 {
                     m_oda = new DataAction(m_oApp.UserCredentials);
                 }
-               return m_oda;
+                return m_oda;
             }
         }
         public virtual AptifyApplication Application
@@ -62,7 +63,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
             {
                 m_oApp = ApplicationObject;
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 Aptify.Framework.ExceptionManagement.ExceptionManager.Publish(ex);
             }
@@ -77,10 +78,10 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         /// SUCCESS, FAILED
         /// 
 
-          
-        public string Run()  
+
+        public string Run()
         {
-           
+
             try
             {
 
@@ -93,17 +94,17 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 Aptify.Framework.ExceptionManagement.ExceptionManager.Publish(ex);
                 m_sResult = "FAILED";
             }
-           
+
             return m_sResult;
         }
-      
-        
-       
+
+
+
         private void SaveForm()
         {
             try
             {
-                
+
                 xmlText = Convert.ToString(m_oProps.GetProperty("XmlData"));
                 RecordId = Convert.ToInt32(m_oProps.GetProperty("RecordId"));
                 AcsCmeSendToBrokerGE = m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
@@ -155,7 +156,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                         {
 
                             int start = strArr[i].IndexOf(toFind1) + toFind1.Length;
-                            int end = strArr[i].IndexOf(toFind2, start); 
+                            int end = strArr[i].IndexOf(toFind2, start);
                             ErrorCode = strArr[i].Substring(start, end - start);
 
                             if (ErrorCode != "")
@@ -170,18 +171,23 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                                 errorMessages = errorMessages + "<table><tr><td>Event:  " + eventId + "</td><td> Error Code:  " + ErrorCode + "</td><td> Error Message:  " + ErrorMes + "</td></tr></table>";
                                 hasErrors = "TRUE";
                             }
-                   
+
                         }
-                       
+
                     }
-                    if (hasErrors == "TRUE")
-                    {
-                        createMessageRun();
-                    }
+                    //if (hasErrors == "TRUE")
+                    //{
+
+                    //}
+                    //else
+                    //{
+                    //    saveStatus();
+                    //}
+                    saveStatus();
                     saveGE();
 
                 }
-               
+
                 // RemoveLocalFile();
             }
             catch (Exception ex)
@@ -198,7 +204,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
             {
                 var sql = "select * from ACSCMEPersonCEBrokerSubmissions where ACSCMEEventId = " + eventId + " and PersonId = " + PersonId + " and ACSCMESendToBrokerId = " + RecordId;
                 var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
-                
+
 
                 //need to get the file that gets created and read it back into
 
@@ -218,8 +224,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     AcsCmePersonSendToBrokerGE.SetValue("ACSCMESendToBrokerId", RecordId);
                     AcsCmePersonSendToBrokerGE.SetValue("PersonId", PersonId);
                     AcsCmePersonSendToBrokerGE.SetValue("ACSCMEEventId", eventId);
-
-
                 }
 
 
@@ -235,6 +239,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     result = "SUCCESS";
 
                 }
+                ceBrokerLearnerId = AcsCmePersonSendToBrokerGE.RecordID;
 
             }
 
@@ -266,7 +271,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     messageRunGe.SetValue("SourceType", "StaticSingle");
                     messageRunGe.SetValue("IDString", "3096875");
                     messageRunGe.SetValue("HTMLBody", errorMessages);
-                    messageRunGe.SetValue("Subject", "CE Broker Person Submission Errors for Record #: " + RecordId );
+                    messageRunGe.SetValue("Subject", "CE Broker Person Submission Errors for Record #: " + RecordId);
                 }
 
 
@@ -275,7 +280,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 {
                     if (!messageRunGe.Save(false))
                     {
-                       
+
                         m_sResult = "FAILED";
                         throw new Exception("Problem Saving Course Record:" + messageRunGe.RecordID);
                     }
@@ -294,7 +299,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         }
         private void saveGE()
         {
-           AcsCmeSendToBrokerGE = m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
+            AcsCmeSendToBrokerGE = m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
             if (hasErrors == "TRUE")
             {
                 AcsCmeSendToBrokerGE.SetValue("Status", "HAS ERRORS");
@@ -318,9 +323,50 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 m_sResult = "SUCCESS";
                 //CreateRecordSent();
             }
-        }
-        
-    }
 
+        }
+        private void saveStatus()
+        {
+            if (hasErrors == "TRUE")
+            {
+                
+                AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMEPersonCEBrokerSubmissions", ceBrokerLearnerId);
+                AcsCmePersonSendToBrokerGE.SetValue("Status", "HAS ERRORS");
+                if (!AcsCmePersonSendToBrokerGE.Save(false))
+                {
+                    result = "FAILED";
+                    throw new Exception("Problem Saving data Record:" + AcsCmePersonSendToBrokerGE.RecordID);
+
+                }
+                else
+                {
+                    AcsCmePersonSendToBrokerGE.Save(true);
+                    result = "SUCCESS";
+
+                }
+                createMessageRun();
+            }
+            else
+            {
+                ceBrokerLearnerId = AcsCmePersonSendToBrokerGE.RecordID;
+                AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMEPersonCEBrokerSubmissions", ceBrokerLearnerId);
+                AcsCmePersonSendToBrokerGE.SetValue("Status", "SUBMITTED");
+                if (!AcsCmePersonSendToBrokerGE.Save(false))
+                {
+                    result = "FAILED";
+                    throw new Exception("Problem Saving data Record:" + AcsCmePersonSendToBrokerGE.RecordID);
+
+                }
+                else
+                {
+                    AcsCmePersonSendToBrokerGE.Save(true);
+                    result = "SUCCESS";
+
+                }
+            }
+
+        }
+
+    }
 
 }

@@ -267,7 +267,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
 
                 searchBoardRecordSql = "select distinct ACSCMEDataBrokerBoard_BoardId from vwACSCMEDataBrokerBoardSubject where ProfessionCode = '" + licenseeProfession + "' and ACSCMEDataBrokerBoard_AuthorizedState = '" +  state + "'";
                 boardId = Convert.ToInt32(m_oda.ExecuteScalar(searchBoardRecordSql));
-                searchBoardSubjectRecordSql = "select * from vwACSCMEDataBrokerBoardSubject where ACSCMEDataBrokerBoard_BoardId = " + boardId + " and ACSCMESubType_ID = " + Convert.ToInt32(EventGE.GetValue("CmeTypeID"));
+                searchBoardSubjectRecordSql = "select * from vwACSCMEDataBrokerBoardSubject where ACSCMEDataBrokerBoard_BoardId = " + boardId + " and ACSCMESubType_ID = " + Convert.ToInt32(EventGE.GetValue("CmeTypeID")) + " and Active = 'True'";
                 _recordBoardSubjectSearchDT = da.GetDataTable(searchBoardSubjectRecordSql);
 
                 if (_recordBoardSubjectSearchDT.Rows.Count > 0)
@@ -280,7 +280,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 }
                 else
                 {
-                    searchBoardTranscriptRecordSql = "select * from vwACSCMEDataBrokerBoardSubject where ACSCMEDataBrokerBoard_BoardId = " + boardId + " and ACSCMESubType_Name = 'Transcript'";
+                    searchBoardTranscriptRecordSql = "select * from vwACSCMEDataBrokerBoardSubject where ACSCMEDataBrokerBoard_BoardId = " + boardId + " and ACSCMESubType_Name = 'Transcript' and Active = 'True'";
                     searchBoardTranscriptRecord = da.GetDataTable(searchBoardTranscriptRecordSql);
                     if (searchBoardTranscriptRecord.Rows.Count > 0)
                     {
@@ -311,7 +311,8 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     //});
                     attendee.partial_credits.Add(new partial_credit
                     {
-                        cd_profession = licenseeProfession,
+                        //cd_profession = licenseeProfession,
+                        cd_profession = cdProfession,
                         cd_subject_area = cdSubjectArea,
                         partial_credit_hours = cmeType1
                     });

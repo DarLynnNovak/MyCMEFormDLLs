@@ -98,11 +98,11 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         string entityIdSql;
         string result = "FAILED";
         string saveLocation = saveLocalPrefix + fileName;
-        string searchRecordSql;
+        string searchRecordSql; 
         string senderIdSql;
         string errorMessages;
         string hasErrors;
-        string ErrorCode;
+        string ErrorCode; 
         string status;
         string ErrorMes;
         int attachmentCatId;
@@ -113,6 +113,8 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         long recordId;
         long userId;
         long MRId;
+        string sql;
+        DataTable dt;
 
         public void Config()
         {
@@ -412,8 +414,8 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 
             try
             {
-                var sql = "select * from acscmecebrokerdata where ACSCMEEventId = " + eventId + " and resubmitevent = 1";
-                var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
+                sql = "select * from acscmecebrokerdata where ACSCMEEventId = " + eventId + " and resubmitevent = 1";
+                dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
                 //need to get the file that gets created and read it back into
 
                 if (dt.Rows.Count > 0)
@@ -463,8 +465,8 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
 
             try
             {
-                var sql = "select * from acscmecebrokerdata where ACSCMEEventId = " + eventId;
-                var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
+                sql = "select * from acscmecebrokerdata where ACSCMEEventId = " + eventId;
+                dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
                 var errorIdSql = "select ID from acscmecebrokererrors where errorcode = " + ErrorCode;
                 int errorId = Convert.ToInt32(m_oda.ExecuteScalar(errorIdSql));
 
@@ -681,6 +683,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                         _parentForm.Close();
                         break;
                 }
+                
             }
             
         }//End BtnClick
@@ -689,8 +692,8 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         {
             try
             {
-                var sql = "SELECT ProviderId, UploadKey FROM vwACSCMEDataBrokerReporter WHERE Active = 1";
-                var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
+                sql = "SELECT ProviderId, UploadKey FROM vwACSCMEDataBrokerReporter WHERE Active = 1";
+                dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
                 // Creates an instance of the XmlSerializer class;
                 // specifies the type of object to serialize.
                 XmlSerializer serializer = new XmlSerializer(typeof(Courses));
@@ -741,19 +744,63 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 var subTypeId = Convert.ToInt32(EventGE.GetValue("CMETypeId"));
                 var cmeMaxCredits = Convert.ToDecimal(EventGE.GetValue("cme_max_credits"));
                 string enddate = Convert.ToString(EventGE.GetValue("cme_end_date"));
+                int eventProgramId = Convert.ToInt32(EventGE.GetValue("ProgramID"));
                 int eventTypeId = Convert.ToInt32(EventGE.GetValue("EventType"));
-                if (eventTypeId == 1)
+
+                if (eventProgramId > 0)
                 {
-                    courseType = "LIVE"; //EventType from ACSCMEEvent 1 = Live
-                    deliveryMethod = "CLASS"; //Education needs to decide how to define this as wee need to start tracking this in ACSCMEEvent
-                }
-                else
-                {
-                    courseType = "ANYTIME"; //EventType from ACSCMEEvent != 1
-                    deliveryMethod = "HOMESTUDY"; //Education needs to decide how to define this as wee need to start tracking this in ACSCMEEvent
+                    sql = "SELECT * FROM vwACSCMEEventDeliveryType WHERE ACSCMEProgramId = " + eventProgramId;
+                    dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
+                    if (dt.Rows.Count > 0)
+                    {
+                        for (int x = 0; x < dt.Rows.Count; x++)
+                        {
+                            courseType = Convert.ToString(dt.Rows[x]["cd_course_type"]);
+                            deliveryMethod = Convert.ToString(dt.Rows[x]["cd_delivery_method"]);
+                        }
+                    }
+                    else
+                    {
+                        sql = "SELECT * FROM vwACSCMEEventDeliveryType WHERE ACSEventTypeId = " + eventTypeId;
+                        dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache); 
+                        if (dt.Rows.Count > 0)
+                        {
+                            for (int x = 0; x < dt.Rows.Count; x++)
+                            {
+                                courseType = Convert.ToString(dt.Rows[x]["cd_course_type"]);
+                                deliveryMethod = Convert.ToString(dt.Rows[x]["cd_delivery_method"]);
+                            }
+                        }
+                    }
                 }
 
-                if (enddate.Length == 0)
+                else
+                {
+                    sql = "SELECT * FROM vwACSCMEEventDeliveryType WHERE ACSEventTypeId = " + eventTypeId;
+                    dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
+                    if (dt.Rows.Count > 0)
+                    {
+                        for (int x = 0; x < dt.Rows.Count; x++)
+                        {
+                            courseType = Convert.ToString(dt.Rows[x]["cd_course_type"]);
+                            deliveryMethod = Convert.ToString(dt.Rows[x]["cd_delivery_method"]);
+                        }
+                    }
+                }
+                
+                 
+                    //if (eventTypeId == 1)
+                    //{
+                    //    courseType = "LIVE"; //EventType from ACSCMEEvent 1 = Live
+                    //    deliveryMethod = "CLASS"; //Education needs to decide how to define this as wee need to start tracking this in ACSCMEEvent
+                    //}
+                    //else
+                    //{
+                    //    courseType = "ANYTIME"; //EventType from ACSCMEEvent != 1
+                    //    deliveryMethod = "CBT"; //Education needs to decide how to define this as wee need to start tracking this in ACSCMEEvent
+                    //}
+
+                    if (enddate.Length == 0)
                 {
                     endDate = Convert.ToDateTime(EventGE.GetValue("cme_start_date"));
                 }
