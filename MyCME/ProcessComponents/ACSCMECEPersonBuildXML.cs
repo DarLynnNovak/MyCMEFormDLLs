@@ -341,13 +341,13 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         {
 
             try
-            {
+            { 
                 entityIdSql = "select ID from Entities where name like 'ACSCMESendToBroker'";
                 entityId = Convert.ToInt32(m_oda.ExecuteScalar(entityIdSql));
                 attachmentCatIdSql = "select ID from vwAttachmentCategories where name like 'MyCMEXML'";
                 attachmentCatId = Convert.ToInt32(m_oda.ExecuteScalar(attachmentCatIdSql));
 
-                fileName = Path.GetFileName(saveLocation);
+                fileName = Path.GetFileName(saveLocation); 
                 data = File.ReadAllBytes(saveLocation);
                 xmlText = System.Text.Encoding.UTF8.GetString(data); 
                 InXML = xmlText;

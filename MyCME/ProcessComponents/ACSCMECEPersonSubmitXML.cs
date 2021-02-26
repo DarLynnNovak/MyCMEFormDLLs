@@ -24,11 +24,15 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         private string url = "";
         private string service = "";
         string errorMessages;
+        string successMessages;
         string hasErrors;
         string responseInString2;
         string ErrorCode;
         string ErrorMes;
         string result = "FAILED";
+        string personEmail;
+        string personEmailSql;
+        string submissionState;
         long ceBrokerLearnerId;
         long RecordId;
         long MRId;
@@ -41,6 +45,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         Rosters rosters = new Rosters();
         XDocument xdoc = new XDocument();
         String xmlText;
+
         public virtual DataAction DataAction
         {
             get
@@ -87,6 +92,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
 
                 m_oProps.GetProperty("XmlData");
                 SaveForm();
+                
 
             }
             catch (Exception ex)
@@ -109,6 +115,8 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 RecordId = Convert.ToInt32(m_oProps.GetProperty("RecordId"));
                 AcsCmeSendToBrokerGE = m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
                 PersonId = Convert.ToInt32(AcsCmeSendToBrokerGE.GetValue("PersonId"));
+                submissionState = Convert.ToString(AcsCmeSendToBrokerGE.GetValue("State"));
+
                 url = Convert.ToString(m_oProps.GetProperty("url"));
                 service = Convert.ToString(m_oProps.GetProperty("service"));
                 InXML = Convert.ToString(xmlText);
@@ -253,8 +261,12 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
 
             try
             {
+
+                personEmailSql = "select email from vwpersons where id = " + PersonId;
+                personEmail = Convert.ToString(da.ExecuteScalar(personEmailSql));
+
                 AptifyGenericEntityBase messageRunGe;
-                messageRunGe = m_oApp.GetEntityObject("Message Runs", -1);
+                messageRunGe = m_oApp.GetEntityObject("Message Runs", -1); 
                 {
 
                     messageRunGe.SetValue("MessageSystemID", 6);
@@ -267,11 +279,65 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     messageRunGe.SetValue("ToType", "Static");
                     messageRunGe.SetValue("ToValue", "dnovak@facs.org");
                     messageRunGe.SetValue("CCType", "Static");
+                    messageRunGe.SetValue("CCValue", "mycme@facs.org");
                     messageRunGe.SetValue("RecipientCount", 0);
                     messageRunGe.SetValue("SourceType", "StaticSingle");
                     messageRunGe.SetValue("IDString", "3096875");
                     messageRunGe.SetValue("HTMLBody", errorMessages);
                     messageRunGe.SetValue("Subject", "CE Broker Person Submission Errors for Record #: " + RecordId);
+                }
+
+
+
+                if (messageRunGe.IsDirty)
+                {
+                    if (!messageRunGe.Save(false))
+                    {
+
+                        m_sResult = "FAILED";
+                        throw new Exception("Problem Saving Course Record:" + messageRunGe.RecordID);
+                    }
+                    else
+                    {
+                        messageRunGe.Save(true);
+                        m_sResult = "SUCCESS";
+                        MRId = messageRunGe.RecordID;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Aptify.Framework.ExceptionManagement.ExceptionManager.Publish(ex);
+            }
+        }
+        private void createMessageRunToLearner()
+        {
+
+            try
+            {
+                personEmailSql = "select email from vwpersons where id = " + PersonId;
+                personEmail = Convert.ToString(da.ExecuteScalar(personEmailSql));
+
+                AptifyGenericEntityBase messageRunGe;
+                messageRunGe = m_oApp.GetEntityObject("Message Runs", -1);
+                {
+
+                    messageRunGe.SetValue("MessageSystemID", 6);
+                    messageRunGe.SetValue("MessageSourceID", 2);
+                    messageRunGe.SetValue("MessageTemplateID", m_oProps.GetProperty("MessageTemplateId"));
+                    messageRunGe.SetValue("ApprovalStatus", "Approved");
+                    messageRunGe.SetValue("Status", "Pending");
+                    messageRunGe.SetValue("ScheduledStartDate", CurrentDate);
+                    messageRunGe.SetValue("Priority", "Normal");
+                    messageRunGe.SetValue("ToType", "Static");
+                    messageRunGe.SetValue("ToValue",personEmail);
+                    messageRunGe.SetValue("CCType", "Static");
+                    messageRunGe.SetValue("CCValue", "mycme@facs.org");
+                    messageRunGe.SetValue("RecipientCount", 0);
+                    messageRunGe.SetValue("SourceType", "StaticSingle");
+                    messageRunGe.SetValue("IDString",PersonId);
+                    messageRunGe.SetValue("HTMLBody", successMessages);
+                    messageRunGe.SetValue("Subject", "CE Broker Submission");
                 }
 
 
@@ -344,7 +410,9 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     result = "SUCCESS";
 
                 }
+                successMessages = "<table><tr><td>Your ACS CME credit submission to " + submissionState + " via CE Broker was <b>not successful</b>. Please contact the MyCME Team at mycme@facs.org or 866-918-479 to resolve any errors and resubmit.</td></tr></table>";
                 createMessageRun();
+                createMessageRunToLearner();
             }
             else
             {
@@ -363,6 +431,8 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     result = "SUCCESS";
 
                 }
+                successMessages = "<table><tr><td>Your ACS CME credit submission to " + submissionState + " via CE Broker was <b>successful</b>. Please contact the MyCME Team at mycme@facs.org or 866-918-479 with any questions. </td></tr></table>";
+                createMessageRunToLearner();
             }
 
         }

@@ -107,6 +107,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         string ErrorMes;
         int attachmentCatId;
         int eventId;
+        string eId;
         int entityId;
         int senderId;
         long attachId;
@@ -130,13 +131,13 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 }
                 if (m_oda.UserCredentials.Server.ToLower() == "stagingaptify61")
                 {
-                    url = "https://test.webservices.cebroker.com/";
-                    service = "CEBrokerWebService.asmx/UploadXMLString";
+                    //url = "https://test.webservices.cebroker.com/";
+                    //service = "CEBrokerWebService.asmx/UploadXMLString";
                 }
                 if (m_oda.UserCredentials.Server.ToLower() == "testaptify610")
                 {
-                    url = "https://test.webservices.cebroker.com/";
-                    service = "CEBrokerWebService.asmx/UploadXMLString";
+                    //url = "https://test.webservices.cebroker.com/";
+                    //service = "CEBrokerWebService.asmx/UploadXMLString";
                 }
 
             }
@@ -222,6 +223,15 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 }
                
                 recordId = FormTemplateContext.GE.RecordID;
+
+                if (Convert.ToString(_eventStartDate.Value) == "")
+                { 
+                    _eventStartDate.Value = CurrentDate;
+                }
+                if (Convert.ToString(_eventEndDate.Value) == "")
+                {
+                    _eventEndDate.Value = CurrentDate;
+                }
 
             }
             catch (Exception ex)
@@ -314,6 +324,8 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         { 
             try
             {
+                //url = "https://test.webservices.cebroker.com/";
+                //service = "CEBrokerWebService.asmx/UploadXMLString";
                 String xmlText = File.ReadAllText(saveLocation);
  
                 InXML = Convert.ToString(xmlText);
@@ -354,26 +366,23 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                             int start = strArr[i].IndexOf(toFind1) + toFind1.Length;
                             int end = strArr[i].IndexOf(toFind2, start);
                             ErrorCode = strArr[i].Substring(start, end - start);
-                            
 
-                            //MessageBox.Show(eventid); 
                             if (ErrorCode != "")
                             {
                                 int eventStart = strArr[i].IndexOf(toFind5) + toFind5.Length;
                                 int eventEnd = strArr[i].IndexOf(toFind6, eventStart);
                                 eventId = Convert.ToInt32(strArr[i].Substring(eventStart, eventEnd - eventStart));
+                                
+
                                 int startmes = strArr[i].IndexOf(toFind3) + toFind3.Length;
                                 int endmes = strArr[i].IndexOf(toFind4, startmes);
                                 ErrorMes = strArr[i].Substring(startmes, endmes - startmes);
+
                                 UpdateErrorMessage();
                                 errorMessages = errorMessages + "<table><tr><td>Event:  " + eventId + "</td><td> Error Code:  " + ErrorCode + "</td><td> Error Message:  " + ErrorMes + "</td></tr></table>";
                                 hasErrors = "TRUE";
                             }
-                            //else
-                            //{
-                            //    CreateRecordSent();
-                            //    hasErrors = "FALSE";
-                            //}
+                           
                         }
                     }
                     
@@ -391,15 +400,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 }
 
                 this.FormTemplateContext.GE.SetValue("XmlData", Convert.ToString(xmlText));
-                //if (senderId > 0)
-                //{
-                //    this.FormTemplateContext.GE.SetValue("SenderId", senderId);
-                //}
-                //else
-                //{
-                //    this.FormTemplateContext.GE.SetValue("SenderId", 03096875);
-                //}
-                
+                               
                 this.FormTemplateContext.GE.Save();
                 RemoveLocalFile();
             }
@@ -671,7 +672,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
             }
             else
             {
-                var answer = MessageBox.Show("Please save this record in order to proceed", "Submit XML", MessageBoxButtons.YesNo);
+                var answer = MessageBox.Show("You must save this record in order to proceed", "Save?", MessageBoxButtons.YesNo);
                 //var answer = MessageBox.Show("Please save this record in order to proceed", "Submit XML");
 
 
@@ -680,7 +681,9 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     case DialogResult.Yes:
                         // SaveForm();
                         FormTemplateContext.GE.Save();
-                        _parentForm.Close();
+                        FormTemplateContext.GE.Display();
+
+                       // _parentForm.Close();
                         break;
                 }
                 
@@ -692,10 +695,12 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         {
             try
             {
-                sql = "SELECT ProviderId, UploadKey FROM vwACSCMEDataBrokerReporter WHERE Active = 1";
+                sql = "SELECT ProviderId, UploadKey, Url, Service FROM vwACSCMEDataBrokerReporter WHERE Active = 1";
                 dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
                 // Creates an instance of the XmlSerializer class;
                 // specifies the type of object to serialize.
+                url = Convert.ToString(dt.Rows[0]["Url"]);
+                service = Convert.ToString(dt.Rows[0]["Service"]);
                 XmlSerializer serializer = new XmlSerializer(typeof(Courses));
                 TextWriter writer = new StreamWriter(saveLocation);
                 //Create Courses XML
