@@ -350,7 +350,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     string toFind3 = "Message=\"";
                     string toFind4 = "\"";
                     string toFind5 = "provider_course_code=\"";
-                    string toFind6 = "\"";
+                    string toFind6 = "\" ";
                     string str; 
                     string[] strArr;
                     int i;
@@ -371,8 +371,8 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                             {
                                 int eventStart = strArr[i].IndexOf(toFind5) + toFind5.Length;
                                 int eventEnd = strArr[i].IndexOf(toFind6, eventStart);
-                                eventId = Convert.ToInt32(strArr[i].Substring(eventStart, eventEnd - eventStart));
-                                
+                                //eventId = Convert.ToInt32(strArr[i].Substring(eventStart, eventEnd - eventStart));
+                                eId = strArr[i].Substring(eventStart, eventEnd - eventStart);
 
                                 int startmes = strArr[i].IndexOf(toFind3) + toFind3.Length;
                                 int endmes = strArr[i].IndexOf(toFind4, startmes);
