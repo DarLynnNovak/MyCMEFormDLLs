@@ -193,7 +193,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         }
         private void RecordSearch()
         {
-            searchRecordSql = "select ID, ACSCMEEventId, CMEDateGranted, CMEType1 FROM ACSPersonCME WHERE convert(date, CMEDateGranted, 120) >= convert(date, '" + _eventStartDate + "', 101) AND convert(date, CMEDateGranted, 120) <= convert(date, '" + _eventEndDate + "', 101) and PersonID = " + personId;
+            searchRecordSql = "select ID, ACSCMEEventId, CMEDateGranted, CMEType1 FROM ACSPersonCME WHERE acscmeeventid not in (Select ID from acscmeevent where name like ('%Claimed CME Credit%')) AND convert(date, CMEDateGranted, 120) >= convert(date, '" + _eventStartDate + "', 101) AND convert(date, CMEDateGranted, 120) <= convert(date, '" + _eventEndDate + "', 101) and PersonID = " + personId;
             _recordSearchDT = da.GetDataTable(searchRecordSql);
             if (_recordSearchDT.Rows.Count > 0)
             {

@@ -594,7 +594,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         {
             try
             {
-                searchRecordSql = "select ID, Name, CME_Start_Date, CME_End_Date,CME_Program, CME_Max_Credits FROM ACSCMEEvent WHERE convert(date, cme_start_date, 120) >= convert(date, '" + _eventStartDate.Value + "', 101) AND convert(date, cme_start_date,120) <= convert(date, '" + _eventEndDate.Value + "', 101) AND ID NOT In(SELECT ACSCMEEventId FROM ACSCMECEBrokerData WHERE ReSubmitEvent = 0 and ACSCMEEventId is not null)";
+                searchRecordSql = "select ID, Name, CME_Start_Date, CME_End_Date,CME_Program, CME_Max_Credits FROM ACSCMEEvent WHERE convert(date, cme_start_date, 120) >= convert(date, '" + _eventStartDate.Value + "', 101) AND convert(date, cme_start_date,120) <= convert(date, '" + _eventEndDate.Value + "', 101) AND ID NOT In(SELECT ACSCMEEventId FROM ACSCMECEBrokerData WHERE ReSubmitEvent = 0 and ACSCMEEventId is not null) and CME_Max_Credits > 0";
                 _recordSearchDT = m_oda.GetDataTable(searchRecordSql);
                 if (_recordSearchDT.Rows.Count > 0)
                 {
@@ -776,6 +776,11 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                                 deliveryMethod = Convert.ToString(dt.Rows[x]["cd_delivery_method"]);
                             }
                         }
+                        else
+                        {
+                            courseType = "ANYTIME"; 
+                            deliveryMethod = "CBT";   
+                        }
                     }
                 }
 
@@ -790,6 +795,11 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                             courseType = Convert.ToString(dt.Rows[x]["cd_course_type"]);
                             deliveryMethod = Convert.ToString(dt.Rows[x]["cd_delivery_method"]);
                         }
+                    }
+                    else
+                    {
+                        courseType = "ANYTIME";
+                        deliveryMethod = "CBT";
                     }
                 }
                 

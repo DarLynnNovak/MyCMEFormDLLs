@@ -206,6 +206,9 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="FormLayoutControls\SendToBroker\ACSCMECESendEvents.cs" />
+    <Compile Include="FormLayoutControls\Tabs\TabControlsLC.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="ProcessComponents\ACSCMECEPersonSubmitXML.cs" />
     <Compile Include="ProcessComponents\ACSCMECEPersonBuildXML.cs" />
     <Compile Include="ProcessComponents\ACSCMEEventSetDeliveryMethod.cs" />
