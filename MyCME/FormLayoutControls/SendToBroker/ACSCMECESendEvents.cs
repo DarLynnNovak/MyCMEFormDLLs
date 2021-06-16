@@ -839,7 +839,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     course_process = "CourseXML", //If this is not a new course being submitted to CE Broker RESUBMITHRSXML
 
                     dt_start = Convert.ToDateTime(EventGE.GetValue("cme_start_date")).ToString("MM/dd/yyyy"), //cme_start_date goes here
-                    dt_end = Convert.ToDateTime(endDate).ToString("MM/dd/yyyy"), //changed this to convert
+                    //dt_end = Convert.ToDateTime(endDate).ToString("MM/dd/yyyy"), //changed this to convert
                     course_board = course.course_board
                 }); 
 
@@ -934,7 +934,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     System.IO.File.Delete(FileToDelete);
                    // MessageBox.Show("File Deleted");
                 }
-                MessageBox.Show("Process Completed.");
+                MessageBox.Show("Process Completed."); 
             }
             catch (Exception ex)
             {

@@ -11,7 +11,7 @@ using System.Xml.Linq;
 
 namespace ACSMyCMEFormDLLs.ProcessComponents
 {
-    public class ACSCMECEPersonSubmitXML : IProcessComponent
+    public class ACSCMECEPersonSubmitXML2 : IProcessComponent
     {
         private AptifyApplication m_oApp = new AptifyApplication();
         AptifyGenericEntityBase AcsCmeSendToBrokerGE;
@@ -33,10 +33,15 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         string personEmail;
         string personEmailSql;
         string submissionState;
+        string cmdCredSql;
         long ceBrokerLearnerId;
         long RecordId;
         long MRId;
         int eventId;
+        decimal partCred;
+        decimal fullCred;
+        decimal creditsClaimedAmount;
+        int fullCredId;
         long PersonId;
         int errorId;
         DataAction da = new DataAction();
@@ -121,7 +126,8 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 service = Convert.ToString(m_oProps.GetProperty("service"));
                 InXML = Convert.ToString(xmlText);
 
-                //adding in saving credit to the learner events being saved
+                
+                    //adding in saving credit to the learner events being saved
 
                 using (var wb = new WebClient())
                 {
@@ -136,7 +142,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
 
                     string toFind1 = "ErrorCode=\"";
                     string toFind2 = "\"";
-                    string toFind3 = "message=\"";
+                    string toFind3 = "message=\""; 
                     string toFind4 = "\"";
                     string toFind5 = "provider_course_code=\"";
                     string toFind6 = "\"";
@@ -148,6 +154,9 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     char[] splitchar = { '\n' };
                     strArr = str.Split(splitchar);
                     errorMessages = "<table><tr><td>CE Broker Person Submission Errors For Record: " + RecordId + "</td></tr></table>";
+
+                    
+
                     for (i = 0; i <= strArr.Length - 1; i++)
                     {
                         if (strArr[i].Contains("provider_course_code=\""))
@@ -157,6 +166,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                             eventId = Convert.ToInt32(strArr[i].Substring(eventStart, eventEnd - eventStart));
                             if (eventId > 0)
                             {
+                                checkPartialCredit();
                                 UpdateErrorMessage();
                             }
 
@@ -177,15 +187,17 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                                 int startmes = strArr[i].IndexOf(toFind3) + toFind3.Length;
                                 int endmes = strArr[i].IndexOf(toFind4, startmes);
                                 ErrorMes = strArr[i].Substring(startmes, endmes - startmes);
-                                hasErrors = "TRUE";
+                                checkPartialCredit();
+                                
                                 errorMessages = errorMessages + "<table><tr><td>Event:  " + eventId + "</td><td> Error Code:  " + ErrorCode + "</td><td> Error Message:  " + ErrorMes + "</td></tr></table>";
+                                hasErrors = "TRUE";
                                 UpdateErrorMessage();
                             }
 
                         }
 
                     }
-
+                                        
                     saveStatus();
                     saveGE();
 
@@ -199,7 +211,39 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
             }
         }
 
+        private void checkPartialCredit()
+        {
+            try
+            {
+                string partCredStart = "<partial_credit_hours>";
+                string partCredEnd = "</partial_credit_hours>";
 
+
+                string credStr;
+                string[] credStrArr;
+                int a;
+
+                credStr = InXML;
+                char[] splitchar1 = { '\n' };
+                credStrArr = credStr.Split(splitchar1);
+                for (a = 0; a <= credStrArr.Length - 1; a++)
+                {
+                    if (credStrArr[a].Contains(partCredStart))
+                    {
+                        int partialCredStart = credStrArr[a].IndexOf(partCredStart) + partCredStart.Length;
+                        int partialCredEnd = credStrArr[a].IndexOf(partCredEnd, partialCredStart);
+                        partCred = Convert.ToDecimal(credStrArr[a].Substring(partialCredStart, partialCredEnd - partialCredStart));
+                        //UpdateErrorMessage();
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                ExceptionManager.Publish(ex);
+            }
+
+        }
         private void UpdateErrorMessage()
         {
 
@@ -207,7 +251,16 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
             {
                 var sql = "select * from ACSCMEPersonCEBrokerSubmissions where ACSCMEEventId = " + eventId + " and PersonId = " + PersonId + " and ACSCMESendToBrokerId = " + RecordId;
                 var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
-
+                if (partCred > 0)
+                {
+                    creditsClaimedAmount = partCred;
+                }
+                else
+                {
+                    cmdCredSql = "select CME_Max_Credits from acscmeevent where id =" + eventId;
+                    fullCred = Convert.ToDecimal(m_oda.ExecuteScalar(cmdCredSql));
+                    creditsClaimedAmount = fullCred;
+                }
 
                 //need to get the file that gets created and read it back into
 
@@ -215,23 +268,41 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 {
                     foreach (DataRow dr in dt.Rows)
                     {
+                        
+
                         if (hasErrors == "TRUE")
                         {
-                            
                             AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMEPersonCEBrokerSubmissions", Convert.ToInt64(dt.Rows[0]["ID"].ToString()));
+                            //AcsCmePersonSendToBrokerGE.SetValue("ACSCMESendToBrokerId", RecordId);
                             AcsCmePersonSendToBrokerGE.SetValue("ErrorCode", ErrorCode);
                             AcsCmePersonSendToBrokerGE.SetValue("ReturnErrorDesc", ErrorMes);
                             AcsCmePersonSendToBrokerGE.SetValue("Status", "HAS ERRORS");
-
+                            //if (partCred > 0)
+                            //{
+                            //    creditsClaimedAmount = partCred;
+                            //}
+                            //else
+                            //{
+                            //    cmdCredSql = "select CME_Max_Credits from acscmeevent where id" + eventId;
+                            //    fullCred = Convert.ToDecimal(m_oda.ExecuteScalar(cmdCredSql));
+                            //    creditsClaimedAmount = fullCred;
+                            //}
                         }
                         else
                         {
                             AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMEPersonCEBrokerSubmissions", Convert.ToInt64(dt.Rows[0]["ID"].ToString()));
                             AcsCmePersonSendToBrokerGE.SetValue("Status", "SUBMITTED");
-
+                            //if (partCred > 0)
+                            //{
+                            //    creditsClaimedAmount = partCred;
+                            //}
+                            //else
+                            //{
+                            //    cmdCredSql = "select CME_Max_Credits from acscmeevent where id" + eventId;
+                            //    fullCred = Convert.ToDecimal(m_oda.ExecuteScalar(cmdCredSql));
+                            //    creditsClaimedAmount = fullCred;
+                            //}
                         }
-
-                        
                     }
                 }
                 else
@@ -239,7 +310,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
 
                     if (hasErrors == "TRUE")
                     {
-
                         AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMEPersonCEBrokerSubmissions", -1);
                         AcsCmePersonSendToBrokerGE.SetValue("ACSCMESendToBrokerId", RecordId);
                         AcsCmePersonSendToBrokerGE.SetValue("PersonId", PersonId);
@@ -247,6 +317,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                         AcsCmePersonSendToBrokerGE.SetValue("ErrorCode", ErrorCode);
                         AcsCmePersonSendToBrokerGE.SetValue("ReturnErrorDesc", ErrorMes);
                         AcsCmePersonSendToBrokerGE.SetValue("Status", "HAS ERRORS");
+                        
                     }
                     else
                     {
@@ -255,9 +326,21 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                         AcsCmePersonSendToBrokerGE.SetValue("PersonId", PersonId);
                         AcsCmePersonSendToBrokerGE.SetValue("ACSCMEEventId", eventId);
                         AcsCmePersonSendToBrokerGE.SetValue("Status", "SUBMITTED");
+                        //if (partCred > 0)
+                        //{
+                        //    creditsClaimedAmount = partCred;
+                        //}
+                        //else
+                        //{
+                        //    cmdCredSql = "select CME_Max_Credits from acscmeevent where id" + eventId;
+                        //    fullCred = Convert.ToDecimal(m_oda.ExecuteScalar(cmdCredSql));
+                        //    creditsClaimedAmount = fullCred;
+                        //}
                     }
-                }
 
+                       
+                }
+                AcsCmePersonSendToBrokerGE.SetValue("CreditsClaimedAmount", creditsClaimedAmount);
 
                 if (!AcsCmePersonSendToBrokerGE.Save(false))
                 {
@@ -309,6 +392,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 //ceBrokerLearnerId = AcsCmePersonSendToBrokerGE.RecordID;
                 //AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMEPersonCEBrokerSubmissions", ceBrokerLearnerId);
                 //AcsCmePersonSendToBrokerGE.SetValue("Status", "SUBMITTED");
+
                 //if (!AcsCmePersonSendToBrokerGE.Save(false))
                 //{
                 //    result = "FAILED";
@@ -450,6 +534,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
             else
             {
                 AcsCmeSendToBrokerGE.Save(true);
+
                 m_sResult = "SUCCESS";
                 //CreateRecordSent();
             }
