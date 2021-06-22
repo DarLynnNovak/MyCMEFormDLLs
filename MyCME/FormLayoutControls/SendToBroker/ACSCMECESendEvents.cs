@@ -783,7 +783,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                         }
                     }
                 }
-                 
+
                 else
                 {
                     sql = "SELECT * FROM vwACSCMEEventDeliveryType WHERE ACSEventTypeId = " + eventTypeId;
@@ -793,7 +793,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                         for (int x = 0; x < dt.Rows.Count; x++)
                         {
                             courseType = Convert.ToString(dt.Rows[x]["cd_course_type"]);
-                            deliveryMethod = Convert.ToString(dt.Rows[x]["cd_delivery_method"]); 
+                            deliveryMethod = Convert.ToString(dt.Rows[x]["cd_delivery_method"]);
                         }
                     }
                     else
@@ -866,7 +866,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 var sqlSubjects = "SELECT * FROM vwACSCMEDataBrokerBoardSubject WHERE Active = 1 AND ACSCMEDataBrokerBoard_BoardId = " + boardId;
                 var dtComponents = DataAction.GetDataTable(sqlSubjects, IAptifyDataAction.DSLCacheSetting.BypassCache);
                 int boardSubTypeId = 0;
-
+                string subAreaCode;
                 if (boardId > 0)
                 {
                     course.course_board.Add(new board
@@ -881,11 +881,20 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     {
                         component component = new component();
                         boardSubTypeId = Convert.ToInt32(dtComponents.Rows[intx]["ACSCMESubType_ID"]);
+                        if (Convert.ToString(dtComponents.Rows[intx]["SubjectAreaCode"]) != null)
+                        {
+                            subAreaCode = Convert.ToString(dtComponents.Rows[intx]["SubjectAreaCode"]);//this needs to be the SubjectAreaCode from ACSSendCmeDataBrokerBoardSubject
+                        }
+                        else 
+                        {
+                            subAreaCode = "";
+                        }
                         if (subTypeId == boardSubTypeId)
                         {
                             board.board_component.Add(new component
                             {
-                                cd_subject_area = Convert.ToString(dtComponents.Rows[intx]["SubjectAreaCode"]), //this needs to be the SubjectAreaCode from ACSSendCmeDataBrokerBoardSubject
+                                cd_subject_area = subAreaCode,
+                                //cd_subject_area = Convert.ToString(dtComponents.Rows[intx]["SubjectAreaCode"]),//this needs to be the SubjectAreaCode from ACSSendCmeDataBrokerBoardSubject
                                 am_app_hours = Convert.ToDecimal(cmeMaxCredits), //cme_max_credits from ACSCMEEvent
                                 cd_profession = Convert.ToString(dtComponents.Rows[intx]["ProfessionCode"]) //this needs to include both MD and DO professions from ACSSendCmeDataBrokerBoardSubject
                             });
@@ -901,11 +910,19 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                         for (int intx = 0; intx < dtComponents.Rows.Count; intx++)
                         {
                             boardSubTypeId = Convert.ToInt32(dtComponents.Rows[intx]["ACSCMESubType_ID"]);
+                            if (Convert.ToString(dtComponents.Rows[intx]["SubjectAreaCode"]) != null)
+                            {
+                                subAreaCode = Convert.ToString(dtComponents.Rows[intx]["SubjectAreaCode"]);//this needs to be the SubjectAreaCode from ACSSendCmeDataBrokerBoardSubject
+                            }
+                            else
+                            {
+                                subAreaCode = "";
+                            }
                             if (boardSubTypeId == 32)
                             {
                                 board.board_component.Add(new component
                                 {
-                                    cd_subject_area = Convert.ToString(dtComponents.Rows[intx]["SubjectAreaCode"]), //this needs to be the SubjectAreaCode from ACSSendCmeDataBrokerBoardSubject
+                                    cd_subject_area = subAreaCode,
                                     am_app_hours = Convert.ToDecimal(cmeMaxCredits), //cme_max_credits from ACSCMEEvent
                                     cd_profession = Convert.ToString(dtComponents.Rows[intx]["ProfessionCode"]) //this needs to include both MD and DO professions from ACSSendCmeDataBrokerBoardSubject
                                 });
