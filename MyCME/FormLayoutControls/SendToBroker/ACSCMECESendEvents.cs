@@ -464,7 +464,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         private void UpdateErrorMessage()
         {
 
-            try
+            try 
             {
                 sql = "select * from acscmecebrokerdata where ACSCMEEventId = " + eventId;
                 dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);

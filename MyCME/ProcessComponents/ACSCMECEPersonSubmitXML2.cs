@@ -153,10 +153,9 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     str = responseInString2;
                     char[] splitchar = { '\n' };
                     strArr = str.Split(splitchar);
-                    errorMessages = "<table><tr><td>CE Broker Person Submission Errors For Record: " + RecordId + "</td></tr></table>";
-
-                    
-
+                    errorMessages = "";
+                   // errorMessages = "<table><tr><td>CE Broker Person Submission Errors For Record: " + RecordId + "</td></tr></table>";
+              
                     for (i = 0; i <= strArr.Length - 1; i++)
                     {
                         if (strArr[i].Contains("provider_course_code=\""))
@@ -191,6 +190,11 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                                 
                                 errorMessages = errorMessages + "<table><tr><td>Event:  " + eventId + "</td><td> Error Code:  " + ErrorCode + "</td><td> Error Message:  " + ErrorMes + "</td></tr></table>";
                                 hasErrors = "TRUE";
+                                UpdateErrorMessage();
+                            }
+                            if (ErrorCode == "")
+                            {
+                                hasErrors = "FALSE";
                                 UpdateErrorMessage();
                             }
 
@@ -288,9 +292,11 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                             //    creditsClaimedAmount = fullCred;
                             //}
                         }
-                        else
+                        if (hasErrors == "FALSE")
                         {
                             AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMEPersonCEBrokerSubmissions", Convert.ToInt64(dt.Rows[0]["ID"].ToString()));
+                            AcsCmePersonSendToBrokerGE.SetValue("ErrorCode", "");
+                            AcsCmePersonSendToBrokerGE.SetValue("ReturnErrorDesc", "");
                             AcsCmePersonSendToBrokerGE.SetValue("Status", "SUBMITTED");
                             //if (partCred > 0)
                             //{
@@ -319,12 +325,14 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                         AcsCmePersonSendToBrokerGE.SetValue("Status", "HAS ERRORS");
                         
                     }
-                    else
+                    if (hasErrors == "FALSE")
                     {
                         AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMEPersonCEBrokerSubmissions", -1);
                         AcsCmePersonSendToBrokerGE.SetValue("ACSCMESendToBrokerId", RecordId);
                         AcsCmePersonSendToBrokerGE.SetValue("PersonId", PersonId);
                         AcsCmePersonSendToBrokerGE.SetValue("ACSCMEEventId", eventId);
+                        AcsCmePersonSendToBrokerGE.SetValue("ErrorCode", "");
+                        AcsCmePersonSendToBrokerGE.SetValue("ReturnErrorDesc", "");
                         AcsCmePersonSendToBrokerGE.SetValue("Status", "SUBMITTED");
                         //if (partCred > 0)
                         //{
