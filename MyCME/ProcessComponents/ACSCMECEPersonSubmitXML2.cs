@@ -281,16 +281,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                             AcsCmePersonSendToBrokerGE.SetValue("ErrorCode", ErrorCode);
                             AcsCmePersonSendToBrokerGE.SetValue("ReturnErrorDesc", ErrorMes);
                             AcsCmePersonSendToBrokerGE.SetValue("Status", "HAS ERRORS");
-                            //if (partCred > 0)
-                            //{
-                            //    creditsClaimedAmount = partCred;
-                            //}
-                            //else
-                            //{
-                            //    cmdCredSql = "select CME_Max_Credits from acscmeevent where id" + eventId;
-                            //    fullCred = Convert.ToDecimal(m_oda.ExecuteScalar(cmdCredSql));
-                            //    creditsClaimedAmount = fullCred;
-                            //}
+                           
                         }
                         if (hasErrors == "FALSE")
                         {
@@ -298,16 +289,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                             AcsCmePersonSendToBrokerGE.SetValue("ErrorCode", "");
                             AcsCmePersonSendToBrokerGE.SetValue("ReturnErrorDesc", "");
                             AcsCmePersonSendToBrokerGE.SetValue("Status", "SUBMITTED");
-                            //if (partCred > 0)
-                            //{
-                            //    creditsClaimedAmount = partCred;
-                            //}
-                            //else
-                            //{
-                            //    cmdCredSql = "select CME_Max_Credits from acscmeevent where id" + eventId;
-                            //    fullCred = Convert.ToDecimal(m_oda.ExecuteScalar(cmdCredSql));
-                            //    creditsClaimedAmount = fullCred;
-                            //}
+                            
                         }
                     }
                 }
@@ -334,16 +316,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                         AcsCmePersonSendToBrokerGE.SetValue("ErrorCode", "");
                         AcsCmePersonSendToBrokerGE.SetValue("ReturnErrorDesc", "");
                         AcsCmePersonSendToBrokerGE.SetValue("Status", "SUBMITTED");
-                        //if (partCred > 0)
-                        //{
-                        //    creditsClaimedAmount = partCred;
-                        //}
-                        //else
-                        //{
-                        //    cmdCredSql = "select CME_Max_Credits from acscmeevent where id" + eventId;
-                        //    fullCred = Convert.ToDecimal(m_oda.ExecuteScalar(cmdCredSql));
-                        //    creditsClaimedAmount = fullCred;
-                        //}
+                        
                     }
 
                        
@@ -377,42 +350,15 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
             if (hasErrors == "TRUE")
             {
 
-                //AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMEPersonCEBrokerSubmissions", ceBrokerLearnerId);
-                //AcsCmePersonSendToBrokerGE.SetValue("Status", "HAS ERRORS");
-                //if (!AcsCmePersonSendToBrokerGE.Save(false))
-                //{
-                //    result = "FAILED";
-                //    throw new Exception("Problem Saving data Record:" + AcsCmePersonSendToBrokerGE.RecordID);
-
-                //}
-                //else
-                //{
-                //    AcsCmePersonSendToBrokerGE.Save(true);
-                //    result = "SUCCESS";
-
-                //}
-                successMessages = "<table><tr><td>Your ACS CME credit submission to " + submissionState + " via CE Broker was <b>not successful</b>. Please contact the MyCME Team at mycme@facs.org or 866-918-479 to resolve any errors and resubmit.</td></tr></table>";
+               
+                //successMessages = "<table><tr><td>Your ACS CME credit submission to " + submissionState + " via CE Broker was <b>not successful</b>. Please contact the MyCME Team at mycme@facs.org or 866-918-479 to resolve any errors and resubmit.</td></tr></table>";
+                successMessages = "<table><tr><td>A portion of your ACS CME credit submission to " + submissionState + " via CE Broker was <b>not successful</b>. Please contact the MyCME Team at mycme@facs.org or 866-918-4799, and they will work to identify and resolve the issue.  Please do not attempt to resend.</td></tr></table>";
                 createMessageRun();
                 createMessageRunToLearner();
             }
             else
             {
-                //ceBrokerLearnerId = AcsCmePersonSendToBrokerGE.RecordID;
-                //AcsCmePersonSendToBrokerGE = m_oApp.GetEntityObject("ACSCMEPersonCEBrokerSubmissions", ceBrokerLearnerId);
-                //AcsCmePersonSendToBrokerGE.SetValue("Status", "SUBMITTED");
-
-                //if (!AcsCmePersonSendToBrokerGE.Save(false))
-                //{
-                //    result = "FAILED";
-                //    throw new Exception("Problem Saving data Record:" + AcsCmePersonSendToBrokerGE.RecordID);
-
-                //}
-                //else
-                //{
-                //    AcsCmePersonSendToBrokerGE.Save(true);
-                //    result = "SUCCESS";
-
-                //}
+                
                 successMessages = "<table><tr><td>Your ACS CME credit submission to " + submissionState + " via CE Broker was <b>successful</b>. Please contact the MyCME Team at mycme@facs.org or 866-918-479 with any questions. </td></tr></table>";
                 createMessageRunToLearner();
             }
