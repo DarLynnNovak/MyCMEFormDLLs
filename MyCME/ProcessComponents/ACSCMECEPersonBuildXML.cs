@@ -2,21 +2,15 @@
 using Aptify.Framework.BusinessLogic.GenericEntity;
 using Aptify.Framework.DataServices;
 using Aptify.Framework.ExceptionManagement;
-using Aptify.Framework.WindowsControls;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Windows.Forms;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using System.Net.Http;
 using System.Net;
 using System.Collections.Specialized;
 using System.Xml;
-using System.Text;
-using System.Web;
 using Aptify.Framework.BusinessLogic.ProcessPipeline;
 
 namespace ACSMyCMEFormDLLs.ProcessComponents
@@ -30,7 +24,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         [XmlElement]
         public List<roster> roster { get;set; }
     }
-
 
     [Serializable]
     public class roster
@@ -64,10 +57,8 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
     public class ACSCMECEPersonBuildXML : IProcessComponent
     {
         private AptifyApplication m_oApp = new AptifyApplication();
-        
         private AptifyProperties m_oProps = new AptifyProperties();
         private DataAction m_oda;
-
         private string m_sResult = "SUCCESS";
         public string InXML = "";
         private string url = "";
@@ -96,12 +87,17 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         string cdSubjectArea;
         long personId;
         int eventId;
+        int eventIdHolder;
+        int childEventId;
+        int parentId = 0;
+        int thisCmeTypeId;
         decimal cmeType1;
+        decimal totalCmeType1 = 0;
+        decimal thisCmeType1 = 0;
         int attachmentCatId;
         int entityId;
         long attachId;
         long RecordId;
-
         string attachmentCatIdSql;
         string entityIdSql;
         byte[] data;
@@ -112,6 +108,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         Rosters rosters = new Rosters();
         XDocument xdoc = new XDocument();
         String xmlText;
+
         public virtual DataAction DataAction  
         {
             get
@@ -120,15 +117,16 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 {
                     m_oda = new DataAction(m_oApp.UserCredentials);
                 }
-               return m_oda;
+                return m_oda;
             }
         }
+
         public virtual AptifyApplication Application
         {
             get { return m_oApp; }
         }
 
-        public void Config(Aptify.Framework.Application.AptifyApplication ApplicationObject)
+        public void Config(AptifyApplication ApplicationObject)
         {
             try
             {
@@ -136,11 +134,11 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
             }
             catch (Exception ex) 
             {
-                Aptify.Framework.ExceptionManagement.ExceptionManager.Publish(ex);
+                ExceptionManager.Publish(ex);
             }
         }
 
-        public Aptify.Framework.Application.AptifyProperties Properties
+        public AptifyProperties Properties
         {
             get { return m_oProps; }
         }
@@ -148,15 +146,12 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         /// Result Codes:
         /// SUCCESS, FAILED
         /// 
-
           
         public string Run() 
         {
-
             try 
             {
                 m_sResult = "SUCCESS";
-
                 RecordId = Convert.ToInt64(m_oProps.GetProperty("RecordId"));
 
                 if (Convert.ToString(RecordId) != "")
@@ -169,7 +164,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     RecordId  = Convert.ToInt64(AcsCmeSendToBrokerGE.GetValue("Id"));
                 }
 
-              
                 personId = Convert.ToInt64(AcsCmeSendToBrokerGE.GetValue("PersonId"));
                 firstName = Convert.ToString(AcsCmeSendToBrokerGE.GetValue("PersonId_FirstName"));
                 lastName = Convert.ToString(AcsCmeSendToBrokerGE.GetValue("PersonId_LastName"));
@@ -180,17 +174,16 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 _eventEndDate = Convert.ToString(AcsCmeSendToBrokerGE.GetValue("EventEndDate"));
 
                 RecordSearch();
-                 
-
             }
             catch (Exception ex)
             {
-                Aptify.Framework.ExceptionManagement.ExceptionManager.Publish(ex);
+                ExceptionManager.Publish(ex);
                 return "FAILED";
             }
 
             return m_sResult;
         }
+
         private void RecordSearch()
         {
             searchRecordSql = "select ID, ACSCMEEventId, CMEDateGranted, CMEType1 FROM ACSPersonCME WHERE acscmeeventid not in (Select ID from acscmeevent where name like ('%Claimed CME Credit%')) AND convert(date, CMEDateGranted, 120) >= convert(date, '" + _eventStartDate + "', 101) AND convert(date, CMEDateGranted, 120) <= convert(date, '" + _eventEndDate + "', 101) and PersonID = " + personId + " and CMEType1 > 0";
@@ -199,13 +192,12 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
             {
                 findSelectedRecords();
             }
-
-           
         }
+
         private void findSelectedRecords()
-      {
+        {
             try
-           {
+            {
                 var sql = "SELECT ProviderId, UploadKey FROM vwACSCMEDataBrokerReporter WHERE Active = 1";
                 var dt = DataAction.GetDataTable(sql, IAptifyDataAction.DSLCacheSetting.BypassCache);
                 // Creates an instance of the XmlSerializer class;
@@ -214,21 +206,66 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 TextWriter writer = new StreamWriter(saveLocation);
 
                 //Create Roster XML
-                 
                 Rosters rosters = new Rosters();
                 rosters.id_parent_provider = Convert.ToInt32(dt.Rows[0]["ProviderId"]);
                 rosters.upload_key = Convert.ToString(dt.Rows[0]["UploadKey"]); //need to get the upload_key number from the CE Broker
                 rosters.roster = new List<roster>();
+                searchBoardRecordSql = "select distinct ACSCMEDataBrokerBoard_BoardId from vwACSCMEDataBrokerBoardSubject where ProfessionCode = '" + licenseeProfession + "' and ACSCMEDataBrokerBoard_AuthorizedState = '" + state + "'";
+                boardId = Convert.ToInt32(m_oda.ExecuteScalar(searchBoardRecordSql));
 
                 for (int x = 0; x < _recordSearchDT.Rows.Count; x++)
                 {
                     eventId = Convert.ToInt32(_recordSearchDT.Rows[x]["ACSCMEEventId"]);
+                    eventIdHolder = Convert.ToInt32(_recordSearchDT.Rows[x]["ACSCMEEventId"]);
                     dateGranted = Convert.ToDateTime(_recordSearchDT.Rows[x]["CMEDateGranted"]);
                     cmeType1 = Convert.ToDecimal(_recordSearchDT.Rows[x]["CMEType1"]);
-                    CreateXml(rosters);
+                    totalCmeType1 = cmeType1;
+                    thisCmeType1 = 0;
+
+                    //loop through all records to see if child records exists and process them first
+                    for (int y = 0; y < _recordSearchDT.Rows.Count; y++)
+                    {
+                        childEventId = Convert.ToInt32(_recordSearchDT.Rows[y]["ACSCMEEventId"]);
+                        EventGE = (AptifyGenericEntityBase)m_oApp.GetEntityObject("ACSCMEEvent", childEventId);
+                        parentId = Convert.ToInt32(EventGE.GetValue("ParentId"));
+                        thisCmeTypeId = Convert.ToInt32(EventGE.GetValue("CmeTypeID"));
+
+                        if (parentId == eventId)
+                        {
+                            searchBoardSubjectRecordSql = "select * from vwACSCMEDataBrokerBoardSubject where ACSCMEDataBrokerBoard_BoardId = " + boardId + " and ACSCMESubType_ID = " + thisCmeTypeId + " and Active = 'True'";
+                            _recordBoardSubjectSearchDT = da.GetDataTable(searchBoardSubjectRecordSql);
+
+                            if (_recordBoardSubjectSearchDT.Rows.Count > 0)
+                            {
+                                eventId = childEventId;
+                                thisCmeType1 = Convert.ToDecimal(_recordSearchDT.Rows[y]["CMEType1"]);
+                                totalCmeType1 -= thisCmeType1;
+
+                                CreateXml(rosters);
+                                if (totalCmeType1 <= 0)
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (totalCmeType1 > 0)
+                    {
+                        eventId = eventIdHolder;
+                        EventGE = (AptifyGenericEntityBase)m_oApp.GetEntityObject("ACSCMEEvent", eventId);
+                        thisCmeTypeId = Convert.ToInt32(EventGE.GetValue("CmeTypeID"));
+                        if (thisCmeTypeId == 32 || thisCmeTypeId < 1)
+                        {
+                            thisCmeTypeId = 32;
+                            thisCmeType1 = totalCmeType1;
+                            CreateXml(rosters);
+                        }
+                    }
                 }
-                    //Serializes the Courses, and closes the TextWriter.
-                    serializer.Serialize(writer, rosters);
+
+                //Serializes the Courses, and closes the TextWriter.
+                serializer.Serialize(writer, rosters);
                 writer.Close();
                 CreateAttachment();
             }
@@ -239,7 +276,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         }
         private void CreateXml(Rosters rosters) 
         {
-
             try
             {
                 roster roster = new roster();
@@ -249,10 +285,9 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 attendee.partial_credits = new List<partial_credit>();
 
                 var exists = "n";
-
-                EventGE = (AptifyGenericEntityBase)m_oApp.GetEntityObject("ACSCMEEvent", eventId);
                 var cmeMaxCredits = Convert.ToDecimal(EventGE.GetValue("cme_max_credits"));
-               
+
+
                 rosters.roster.Add(new roster
                 {
                     id_provider = rosters.id_parent_provider,
@@ -260,14 +295,13 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     attendees  = roster.attendees
 
                 });
-                if (cmeType1 < cmeMaxCredits)
+
+                if (thisCmeType1 < cmeMaxCredits)
                 {                 
                     exists = "y";
                 }
 
-                searchBoardRecordSql = "select distinct ACSCMEDataBrokerBoard_BoardId from vwACSCMEDataBrokerBoardSubject where ProfessionCode = '" + licenseeProfession + "' and ACSCMEDataBrokerBoard_AuthorizedState = '" +  state + "'";
-                boardId = Convert.ToInt32(m_oda.ExecuteScalar(searchBoardRecordSql));
-                searchBoardSubjectRecordSql = "select * from vwACSCMEDataBrokerBoardSubject where ACSCMEDataBrokerBoard_BoardId = " + boardId + " and ACSCMESubType_ID = " + Convert.ToInt32(EventGE.GetValue("CmeTypeID")) + " and Active = 'True'";
+                searchBoardSubjectRecordSql = "select * from vwACSCMEDataBrokerBoardSubject where ACSCMEDataBrokerBoard_BoardId = " + boardId + " and ACSCMESubType_ID = " + thisCmeTypeId + " and Active = 'True'";
                 _recordBoardSubjectSearchDT = da.GetDataTable(searchBoardSubjectRecordSql);
 
                 if (_recordBoardSubjectSearchDT.Rows.Count > 0)
@@ -278,7 +312,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                         cdSubjectArea = Convert.ToString(_recordBoardSubjectSearchDT.Rows[x]["SubjectAreaCode"]);
                     }
                 }
-                else
+                else if (Convert.ToInt32(EventGE.GetValue("CmeTypeID")) == 32 || Convert.ToInt32(EventGE.GetValue("CmeTypeID")) < 1)
                 {
                     searchBoardTranscriptRecordSql = "select * from vwACSCMEDataBrokerBoardSubject where ACSCMEDataBrokerBoard_BoardId = " + boardId + " and ACSCMESubType_Name = 'Transcript' and Active = 'True'";
                     searchBoardTranscriptRecord = da.GetDataTable(searchBoardTranscriptRecordSql);
@@ -314,7 +348,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                         //cd_profession = licenseeProfession,
                         cd_profession = cdProfession,
                         cd_subject_area = cdSubjectArea,
-                        partial_credit_hours = cmeType1
+                        partial_credit_hours = thisCmeType1
                     });
                 }
                 else
@@ -328,7 +362,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                         first_name = firstName,
                         last_name = lastName,
                         date_completed = Convert.ToDateTime(dateGranted).ToString("MM/dd/yyyy")
-
                     });
                 }
             }
@@ -339,7 +372,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         }
         private void CreateAttachment()
         {
-
             try
             { 
                 entityIdSql = "select ID from Entities where name like 'ACSCMESendToBroker'";
@@ -366,7 +398,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 {
                     m_sResult = "FAILED";
                     throw new Exception("Problem Saving attachments Record:" + AttachmentsGE.RecordID);
-
                 }
                 else
                 {
@@ -379,7 +410,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     SaveAttachmentBlob();
                 }
             }
-
             catch (Exception ex)
             {
                 ExceptionManager.Publish(ex);
@@ -395,7 +425,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 m_oda.ExecuteNonQueryParametrized("Aptify.dbo.spInsertAttachmentBlob", CommandType.StoredProcedure, dp);
 
                 saveGE();
-
             }
             catch (Exception ex)
             {
@@ -413,9 +442,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 InXML = xmlText;
                 using (var wb = new WebClient())
                 {
-
-                   // xmlText = wb.DownloadString(newfilename);
-                    
+                    // xmlText = wb.DownloadString(newfilename);
                     //InXML = Convert.ToString(xmlText);
                     var xmlData = new NameValueCollection();
                     xmlData["InXML"] = InXML;
@@ -428,13 +455,11 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     string responseInString1 = responseInString.Replace("&lt;", "\n<");
                     string responseInString2 = responseInString1.Replace("&gt;", ">");
 
-
                     xdoc = XDocument.Parse(responseInString2);
-                  
                 }
+
                 saveGE();
-               // m_sResult = "SUCCESS";
-               
+                // m_sResult = "SUCCESS";
                 // RemoveLocalFile();
             }
             catch (Exception ex)
@@ -463,11 +488,12 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
         }
         private void saveGE()
         {
-           AcsCmeSendToBrokerGE = m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
-           AcsCmeSendToBrokerGE.SetValue("XmlData", Convert.ToString(xmlText));
-          // AcsCmeSendToBrokerGE.SetValue("XmlResponse", xdoc);
-           AcsCmeSendToBrokerGE.SetValue("DateSent", Time);
-           AcsCmeSendToBrokerGE.Save();
+            AcsCmeSendToBrokerGE = m_oApp.GetEntityObject("ACSCMESendToBroker", RecordId);
+            AcsCmeSendToBrokerGE.SetValue("XmlData", Convert.ToString(xmlText));
+            // AcsCmeSendToBrokerGE.SetValue("XmlResponse", xdoc);
+            AcsCmeSendToBrokerGE.SetValue("DateSent", Time);
+            AcsCmeSendToBrokerGE.Save();
+
             if (!AcsCmeSendToBrokerGE.Save(false))
             {
                 m_sResult = "FAILED";
@@ -480,8 +506,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 m_sResult = "SUCCESS";
 
             }
-
-
         }
     }
 }
