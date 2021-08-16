@@ -193,7 +193,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 findSelectedRecords();
             }
         }
-
         private void findSelectedRecords()
         {
             try
@@ -204,7 +203,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 // specifies the type of object to serialize.
                 XmlSerializer serializer = new XmlSerializer(typeof(Rosters));
                 TextWriter writer = new StreamWriter(saveLocation);
-
                 //Create Roster XML
                 Rosters rosters = new Rosters();
                 rosters.id_parent_provider = Convert.ToInt32(dt.Rows[0]["ProviderId"]);
@@ -212,7 +210,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 rosters.roster = new List<roster>();
                 searchBoardRecordSql = "select distinct ACSCMEDataBrokerBoard_BoardId from vwACSCMEDataBrokerBoardSubject where ProfessionCode = '" + licenseeProfession + "' and ACSCMEDataBrokerBoard_AuthorizedState = '" + state + "'";
                 boardId = Convert.ToInt32(m_oda.ExecuteScalar(searchBoardRecordSql));
-
                 for (int x = 0; x < _recordSearchDT.Rows.Count; x++)
                 {
                     eventId = Convert.ToInt32(_recordSearchDT.Rows[x]["ACSCMEEventId"]);
@@ -221,7 +218,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                     cmeType1 = Convert.ToDecimal(_recordSearchDT.Rows[x]["CMEType1"]);
                     totalCmeType1 = cmeType1;
                     thisCmeType1 = 0;
-
                     //loop through all records to see if child records exists and process them first
                     for (int y = 0; y < _recordSearchDT.Rows.Count; y++)
                     {
@@ -229,18 +225,15 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                         EventGE = (AptifyGenericEntityBase)m_oApp.GetEntityObject("ACSCMEEvent", childEventId);
                         parentId = Convert.ToInt32(EventGE.GetValue("ParentId"));
                         thisCmeTypeId = Convert.ToInt32(EventGE.GetValue("CmeTypeID"));
-
                         if (parentId == eventId)
                         {
                             searchBoardSubjectRecordSql = "select * from vwACSCMEDataBrokerBoardSubject where ACSCMEDataBrokerBoard_BoardId = " + boardId + " and ACSCMESubType_ID = " + thisCmeTypeId + " and Active = 'True'";
                             _recordBoardSubjectSearchDT = da.GetDataTable(searchBoardSubjectRecordSql);
-
                             if (_recordBoardSubjectSearchDT.Rows.Count > 0)
                             {
                                 eventId = childEventId;
                                 thisCmeType1 = Convert.ToDecimal(_recordSearchDT.Rows[y]["CMEType1"]);
                                 totalCmeType1 -= thisCmeType1;
-
                                 CreateXml(rosters);
                                 if (totalCmeType1 <= 0)
                                 {
@@ -249,7 +242,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                             }
                         }
                     }
-
                     if (totalCmeType1 > 0)
                     {
                         eventId = eventIdHolder;
@@ -263,7 +255,6 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                         }
                     }
                 }
-
                 //Serializes the Courses, and closes the TextWriter.
                 serializer.Serialize(writer, rosters);
                 writer.Close();
@@ -274,6 +265,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                 ExceptionManager.Publish(ex);
             }
         }
+        
         private void CreateXml(Rosters rosters) 
         {
             try
