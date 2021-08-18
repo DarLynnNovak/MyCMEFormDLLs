@@ -253,6 +253,7 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                             thisCmeType1 = totalCmeType1;
                             CreateXml(rosters);
                         }
+                        totalCmeType1 = 0;
                     }
                 }
                 //Serializes the Courses, and closes the TextWriter.
@@ -330,14 +331,9 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                         date_completed = Convert.ToDateTime(dateGranted).ToString("MM/dd/yyyy"),
                         partial_credits = attendee.partial_credits
                     });
-                    //roster.attendees.Add(new attendee
-                    //{
-                    //    partial_credits = attendee.partial_credits
 
-                    //});
                     attendee.partial_credits.Add(new partial_credit
                     {
-                        //cd_profession = licenseeProfession,
                         cd_profession = cdProfession,
                         cd_subject_area = cdSubjectArea,
                         partial_credit_hours = thisCmeType1
