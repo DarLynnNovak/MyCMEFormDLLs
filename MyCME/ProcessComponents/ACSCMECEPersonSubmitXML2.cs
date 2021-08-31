@@ -281,7 +281,9 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                             AcsCmePersonSendToBrokerGE.SetValue("ErrorCode", ErrorCode);
                             AcsCmePersonSendToBrokerGE.SetValue("ReturnErrorDesc", ErrorMes);
                             AcsCmePersonSendToBrokerGE.SetValue("Status", "HAS ERRORS");
-                           
+                            // AcsCmePersonSendToBrokerGE.SetValue("CreditsClaimedAmount", 0.00);
+                            creditsClaimedAmount = 0;
+
                         }
                         if (hasErrors == "FALSE")
                         {
@@ -305,7 +307,8 @@ namespace ACSMyCMEFormDLLs.ProcessComponents
                         AcsCmePersonSendToBrokerGE.SetValue("ErrorCode", ErrorCode);
                         AcsCmePersonSendToBrokerGE.SetValue("ReturnErrorDesc", ErrorMes);
                         AcsCmePersonSendToBrokerGE.SetValue("Status", "HAS ERRORS");
-                        
+                        creditsClaimedAmount = 0;
+
                     }
                     if (hasErrors == "FALSE")
                     {
