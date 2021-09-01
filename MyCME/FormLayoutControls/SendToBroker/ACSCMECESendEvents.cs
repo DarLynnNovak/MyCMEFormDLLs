@@ -93,11 +93,13 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
         DataGridViewCheckBoxCell recordCheckBox = new DataGridViewCheckBoxCell();
         XDocument xDoc = new XDocument();
         static string saveLocalPrefix = @"C:\Users\Public\Documents\";
-        static string fileName;
+        static string fileName = "XmlEventCourses" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".xml";
+        static string respFileName = "XmlEventCourseResp" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".xml";
         string attachmentCatIdSql;
         string entityIdSql;
         string result = "FAILED";
         string saveLocation = saveLocalPrefix + fileName;
+        string saveRespLocation = saveLocalPrefix + respFileName;
         string searchRecordSql; 
         string senderIdSql;
         string errorMessages;
@@ -301,6 +303,51 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 ExceptionManager.Publish(ex);
             }
         }
+        private void CreateRespAttachment()
+        {
+
+            try
+            {
+                entityIdSql = "select ID from Entities where name like 'ACSCMEEventsSendToBroker'";
+                entityId = Convert.ToInt32(m_oda.ExecuteScalar(entityIdSql));
+                attachmentCatIdSql = "select ID from vwAttachmentCategories where name like 'MyCMEXML'";
+                attachmentCatId = Convert.ToInt32(m_oda.ExecuteScalar(attachmentCatIdSql));
+
+                fileName = Path.GetFileName(saveRespLocation);
+                data = File.ReadAllBytes(saveRespLocation);
+
+                AttachmentsGE = m_oApp.GetEntityObject("Attachments", -1);
+                AttachmentsGE.SetValue("Name", fileName);
+                AttachmentsGE.SetValue("Description", "XMLCEData");
+                AttachmentsGE.SetValue("EntityID", entityId);
+                AttachmentsGE.SetValue("RecordID", recordId);
+                AttachmentsGE.SetValue("CategoryID", attachmentCatId);
+                AttachmentsGE.SetValue("LocalFileName", saveRespLocation);
+                AttachmentsGE.SetValue("BlobData", data);
+
+                if (!AttachmentsGE.Save(false))
+                {
+                    result = "FAILED";
+                    throw new Exception("Problem Saving attachments Record:" + AttachmentsGE.RecordID);
+
+                }
+                else
+                {
+                    AttachmentsGE.Save(true);
+                    result = "SUCCESS";
+                    attachId = AttachmentsGE.RecordID;
+                }
+                if (result == "SUCCESS")
+                {
+                    SaveAttachmentBlob();
+                }
+            }
+
+            catch (Exception ex)
+            {
+                ExceptionManager.Publish(ex);
+            }
+        }
         public void SaveAttachmentBlob()
         {
             try
@@ -310,6 +357,8 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 dp[1] = m_oda.GetDataParameter("@BLOBData", SqlDbType.Image, data.Length, data);
                 m_oda.ExecuteNonQueryParametrized("Aptify.dbo.spInsertAttachmentBlob", CommandType.StoredProcedure, dp);
                 //CreateRecordSent();
+                
+
             }
             catch (Exception ex)
             {
@@ -385,6 +434,8 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     }
                     
                     this.FormTemplateContext.GE.SetValue("XmlResponse", xdoc);
+                    xdoc.Save(saveRespLocation);
+                    CreateRespAttachment();
 
                 }
                 if (hasErrors == "TRUE")
@@ -400,8 +451,6 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 this.FormTemplateContext.GE.SetValue("XmlData", Convert.ToString(xmlText));
                                
                 this.FormTemplateContext.GE.Save();
-                fileName = "XmlEventCourseResponses" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".xml";
-                CreateAttachment();
                 RemoveLocalFile();
             }
             catch (Exception ex)
@@ -665,7 +714,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     case DialogResult.Yes:
                         // SaveForm();
                         findSelectedRecords();
-                        SaveForm();
+
 
                         break;
                 }
@@ -726,7 +775,8 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 //Serializes the Courses, and closes the TextWriter.
                 serializer.Serialize(writer, courses);
                 writer.Close();
-               
+                CreateAttachment();
+                SaveForm();
                 //CreateRecordSent();
             }
             catch (Exception ex)
@@ -844,9 +894,6 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 }); 
 
                 CreateBoard(course, subTypeId, cmeMaxCredits);
-                fileName = "XmlEventCourses" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".xml";
-                CreateAttachment();
-                RemoveLocalFile();
             }
             catch (Exception ex)
             {
