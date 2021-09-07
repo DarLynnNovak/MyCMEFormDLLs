@@ -211,6 +211,7 @@
     </Compile>
     <Compile Include="ProcessComponents\ACSCMECEPersonBuildXML.cs" />
     <Compile Include="ProcessComponents\ACSCMECEPersonSubmitXML.cs" />
+    <Compile Include="ProcessComponents\ACSCMECEPersonSubmitXML3.cs" />
     <Compile Include="ProcessComponents\ACSCMECEPersonSubmitXML2.cs" />
     <Compile Include="ProcessComponents\ACSCMEEventSetDeliveryMethod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -237,10 +238,7 @@
     <IncrementBuildNumber AssemblyFileLocation="$(MSBuildProjectDirectory)\Properties\AssemblyInfo.cs" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>if "$(ConfigurationName)" == "Aptify Test" (call "C:\Program Files\KillAptify\StartAptifyTest.bat")
-if "$(ConfigurationName)" == "Aptify Staging" (call "C:\Program Files\KillAptify\StartAptifyStage.bat")
-if "$(ConfigurationName)" == "Aptify Prod" (call "C:\Program Files\KillAptify\StartAptifyProd.bat")
-if "$(ConfigurationName)" == "Aptify Test 6" (call "C:\Program Files\KillAptify\StartAptifyTest60.bat")
+    <PostBuildEvent>if "$(ConfigurationName)" == "Aptify Test 6" (call "C:\Program Files\KillAptify\StartAptifyTest60.bat")
 if "$(ConfigurationName)" == "Aptify Staging 6" (call "C:\Program Files\KillAptify\StartAptifyStage60.bat")
 if "$(ConfigurationName)" == "Aptify Prod 6" (call "C:\Program Files\KillAptify\StartAptifyProd60.bat")</PostBuildEvent>
   </PropertyGroup>
