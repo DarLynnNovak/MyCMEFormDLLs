@@ -209,7 +209,7 @@
     <Compile Include="FormLayoutControls\Tabs\TabControlsLC.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ProcessComponents\ACSCMECEPersonBuildXML.cs" />
+    <Compile Include="ProcessComponents\ACSCMECEPersonBuildXML2.cs" />
     <Compile Include="ProcessComponents\ACSCMECEPersonSubmitXML.cs" />
     <Compile Include="ProcessComponents\ACSCMECEPersonSubmitXML3.cs" />
     <Compile Include="ProcessComponents\ACSCMECEPersonSubmitXML2.cs" />
