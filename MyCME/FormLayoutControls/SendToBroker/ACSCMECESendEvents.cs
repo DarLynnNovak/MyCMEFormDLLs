@@ -793,7 +793,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 course course = new course();
                 course.course_board = new List<board>();
                 string courseType = "";
-                string deliveryMethod = "";
+                string deliveryMethod = ""; 
                 DateTime endDate;
                 EventGE = m_oApp.GetEntityObject("ACSCMEEvent", eventId);
                 var subTypeId = Convert.ToInt32(EventGE.GetValue("CMETypeId"));
