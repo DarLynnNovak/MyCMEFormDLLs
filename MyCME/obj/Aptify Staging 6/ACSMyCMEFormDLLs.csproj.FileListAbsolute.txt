@@ -1,0 +1,8 @@
+C:\Code CSharp\ACSMyCMEFormDLLs162021\MyCME\obj\Aptify Staging 6\ACSMyCMEFormDLLs.csprojAssemblyReference.cache
+C:\Code CSharp\ACSMyCMEFormDLLs162021\MyCME\obj\Aptify Staging 6\ACSMyCMEFormDLLs.Properties.Resources.resources
+C:\Code CSharp\ACSMyCMEFormDLLs162021\MyCME\obj\Aptify Staging 6\ACSMyCMEFormDLLs.csproj.GenerateResource.cache
+C:\Code CSharp\ACSMyCMEFormDLLs162021\MyCME\obj\Aptify Staging 6\ACSMyCMEFormDLLs.csproj.CoreCompileInputs.cache
+C:\Code CSharp\ACSMyCMEFormDLLs162021\MyCME\obj\Aptify Staging 6\ACSMyCMEFormDLLs.dll
+C:\Code CSharp\ACSMyCMEFormDLLs162021\MyCME\obj\Aptify Staging 6\ACSMyCMEFormDLLs.pdb
+C:\Program Files\Aptify 6.0 - Staging\ACSMyCMEFormDLLs.dll
+C:\Program Files\Aptify 6.0 - Staging\ACSMyCMEFormDLLs.pdb
