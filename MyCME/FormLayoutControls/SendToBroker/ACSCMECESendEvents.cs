@@ -810,7 +810,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                     {
                         for (int x = 0; x < dt.Rows.Count; x++)
                         {
-                            courseType = Convert.ToString(dt.Rows[x]["cd_course_type"]);
+                            courseType = Convert.ToString(dt.Rows[x]["cd_course_type"]); 
                             deliveryMethod = Convert.ToString(dt.Rows[x]["cd_delivery_method"]);
                         }
                     }
