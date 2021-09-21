@@ -794,7 +794,7 @@ namespace ACSMyCMEFormDLLs.FormLayoutControls.SendToBroker
                 course.course_board = new List<board>();
                 string courseType = "";
                 string deliveryMethod = ""; 
-                DateTime endDate;
+                DateTime endDate; 
                 EventGE = m_oApp.GetEntityObject("ACSCMEEvent", eventId);
                 var subTypeId = Convert.ToInt32(EventGE.GetValue("CMETypeId"));
                 var cmeMaxCredits = Convert.ToDecimal(EventGE.GetValue("cme_max_credits"));
